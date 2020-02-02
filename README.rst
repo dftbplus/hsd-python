@@ -2,7 +2,7 @@
 HSD — Human-friendly Structured Data
 ************************************
 
-This Python package contains utilities to write (and soon also to read) files in
+This Python package contains utilities to read and write files in
 the Human-friendly Structured Data (HSD) format.
 
 It is licensed under the *BSD 2-clause license*.
