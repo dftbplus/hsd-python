@@ -15,9 +15,9 @@ The HSD-format is very similar to both JSON and XML, but tries to minimize the
 effort for humans to read and write it. It ommits special characters as much as
 possible but (in contrast to YAML for example) is not indentation dependent.
 
-It was developed originally developed as the input format for a scientific
-simulation tool (DFTB+), but is absolutely general. A typical input written in
-HSD would look like ::
+It was developed originally as the input format for a scientific simulation tool
+(`DFTB+ <https://github.com/dftbplus/dftbplus>`_), but is absolutely general. A
+typical input written in HSD looks like ::
 
   driver {
     conjugate_gradients {
@@ -49,12 +49,13 @@ HSD would look like ::
     }
   }
 
-Content in HSD format can be represented as JSON. Content in JSON format can be
-represented as HSD, provided it satisfies a restriction for arrays: Either all
-elements of an array must be objects or none of them. (This allows for a clear
-separation of structure and data and allows for the very simple input format.)
+Content in HSD format can be represented as JSON. Content in JSON format can
+similarly be represented as HSD, provided it satisfies one restriction for
+arrays: Either all elements of an array must be objects or none of them. (This
+allows for a clear separation of structure and data and allows for the very
+simple input format.)
 
-Content in HSD format can be represented as XML (DOM-tree). Content in XML can
-be converted to HSD, provided it satisfies the restriction that every child has
-either data (text) or further children, but never both of them. (Again, this
-ensures the simplicity of the input format.)
+Content in HSD format can be represented as XML (DOM-tree). Likewise content in
+XML can be converted to HSD, provided it satisfies the restriction that every
+child has either data (text) or further children, but never both of
+them. (Again, this ensures the simplicity of the input format.)
