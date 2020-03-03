@@ -27,7 +27,10 @@ _TOKEN_PATTERN = re.compile(r"""
 
 
 class HsdDictBuilder(HsdEventHandler):
-    """Deserializes HSD into nested dictionaries"""
+    """Deserializes HSD into nested dictionaries
+
+    Note: hsdoptions passed by the generating events are ignored.
+    """
 
     def __init__(self, flatten_data=False):
         HsdEventHandler.__init__(self)

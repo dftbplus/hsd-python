@@ -114,7 +114,7 @@ class HsdParser:
         self._inside_option = False        # parser inside option specification
         self._inside_quote = False         # parser inside quotation
         self._has_child = False
-        self._oldbefore = ""
+        self._oldbefore = ""               # buffer for tagname
 
 
     def feed(self, fobj):
@@ -178,7 +178,9 @@ class HsdParser:
             elif sign == "=" and not self._inside_option:
                 # Ignore if followed by "{" (DFTB+ compatibility)
                 if after.lstrip().startswith("{"):
-                    self._oldbefore = before
+                    # _oldbefore may already contain the tagname, if the
+                    # tagname was followed by an attribute -> append
+                    self._oldbefore += before
                 else:
                     self._has_child = True
                     self._hsdoptions[common.HSDATTR_EQUAL] = True
