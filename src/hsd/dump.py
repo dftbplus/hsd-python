@@ -120,10 +120,10 @@ def _list_to_hsd(lst):
 
 def _item_to_hsd(item):
 
-    if isinstance(item, (int, float)):
-        return str(item)
-    elif isinstance(item, bool):
+    if isinstance(item, bool):
         return "Yes" if item else "No"
+    elif isinstance(item, (int, float)):
+        return str(item)
     elif isinstance(item, str):
         return _str_to_hsd(item)
     else:
