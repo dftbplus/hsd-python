@@ -22,7 +22,7 @@ _TOKEN_PATTERN = re.compile(r"""
 |
 (?:\s*(?:^|(?<=\s))(?P<logical>[Yy][Ee][Ss]|[Nn][Oo])(?:$|(?=\s+)))
 |
-(?:(?P<qstr>(?P<quote>['"]).*?(?P=quote)) | (?P<str>.+?)(?:$|\s+))
+(?:\s*(?:(?P<qstr>(?P<quote>['"]).*?(?P=quote)) | (?P<str>.+?))(?:$|\s+))
 """, re.VERBOSE | re.MULTILINE)
 
 
