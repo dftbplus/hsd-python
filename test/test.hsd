@@ -17,8 +17,13 @@ Hamiltonian {
       Broyden {}
     }
     MaxAngularMomentum {
-      O = "p"
-      H = "s"
+      H = SelectedShells {"s" "s" }
+      O = SelectedShells {"s" "p" }
+    }
+    Dispersion = SlaterKirkwood {
+      PolarRadiusCharge [AA^3,AA,] = {
+        1.030000    3.800000    2.820000
+      }
     }
     Filling {
       Fermi {
