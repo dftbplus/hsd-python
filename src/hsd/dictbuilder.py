@@ -22,7 +22,7 @@ _TOKEN_PATTERN = re.compile(r"""
 |
 (?:\s*(?:^|(?<=\s))(?P<logical>[Yy][Ee][Ss]|[Nn][Oo])(?:$|(?=\s+)))
 |
-(?:(?P<qstr>(?P<quote>['"]).*?(?P=quote)) | (?P<str>.+?)(?:$|\s+))
+(?:\s*(?:(?P<qstr>(?P<quote>['"]).*?(?P=quote)) | (?P<str>.+?))(?:$|\s+))
 """, re.VERBOSE | re.MULTILINE)
 
 
@@ -41,9 +41,9 @@ class HsdDictBuilder(HsdEventHandler):
         self._flatten_data = flatten_data
 
 
-    def open_tag(self, tagname, options, hsdoptions):
-        for attrname, attrvalue in options.items():
-            self._curblock[tagname + '.' + attrname] = attrvalue
+    def open_tag(self, tagname, attrib, hsdoptions):
+        if attrib is not None:
+            self._curblock[tagname + '.attribute'] = attrib
         self._parentblocks.append(self._curblock)
         self._curblock = {}
 

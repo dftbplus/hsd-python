@@ -18,12 +18,12 @@ __all__ = ["HsdParser",
 
 SYNTAX_ERROR = 1
 UNCLOSED_TAG_ERROR = 2
-UNCLOSED_OPTION_ERROR = 3
+UNCLOSED_ATTRIB_ERROR = 3
 UNCLOSED_QUOTATION_ERROR = 4
 ORPHAN_TEXT_ERROR = 5
 
 _GENERAL_SPECIALS = "{}[]<=\"'#;"
-_OPTION_SPECIALS = ",]=\"'#{};"
+_ATTRIB_SPECIALS = "]\"'"
 
 
 class HsdEventHandler:
@@ -35,7 +35,7 @@ class HsdEventHandler:
         self._indentstr = "  "
 
 
-    def open_tag(self, tagname, options, hsdoptions):
+    def open_tag(self, tagname, attrib, hsdoptions):
         """Handler which is called when a tag is opened.
 
         It should be overriden in the application to handle the event in a
@@ -43,13 +43,13 @@ class HsdEventHandler:
 
         Args:
             tagname: Name of the tag which had been opened.
-            options: Dictionary of the options (attributes) of the tag.
+            attrib: String containing the attribute of the tag or None.
             hsdoptions: Dictionary of the options created during the processing
                 in the hsd-parser.
         """
         indentstr = self._indentlevel * self._indentstr
         print("{}OPENING TAG: {}".format(indentstr, tagname))
-        print("{}OPTIONS: {}".format(indentstr, str(options)))
+        print("{}ATTRIBUTE: {}".format(indentstr, attrib))
         print("{}HSD OPTIONS: {}".format(indentstr, str(hsdoptions)))
         self._indentlevel += 1
 
@@ -88,11 +88,10 @@ class HsdParser:
     and `_handle_error()` should be overridden by the actual application.
     """
 
-    def __init__(self, defattrib=common.DEFAULT_ATTRIBUTE, eventhandler=None):
+    def __init__(self, eventhandler=None):
         """Initializes the parser.
 
         Args:
-            defattrib: Name of the default attribute (default: 'attribute')
             eventhandler: Instance of the HsdEventHandler class or its children.
         """
         if eventhandler is None:
@@ -101,17 +100,15 @@ class HsdParser:
             self._eventhandler = eventhandler
 
         self._fname = ""                   # Name of file being processed
-        self._defattrib = defattrib.lower()  # def. attribute name
         self._checkstr = _GENERAL_SPECIALS  # special characters to look for
         self._oldcheckstr = ""             # buffer fo checkstr
         self._opened_tags = []             # info about opened tags
         self._buffer = []                  # buffering plain text between lines
-        self._options = OrderedDict()      # options for current tag
+        self._attrib = None                # attribute for current tag
         self._hsdoptions = OrderedDict()   # hsd-options for current tag
-        self._key = ""                     # current option name
         self._currline = 0                 # nr. of current line in file
         self._after_equal_sign = False    # last tag was opened with equal sign
-        self._inside_option = False        # parser inside option specification
+        self._inside_attrib = False        # parser inside attrib specification
         self._inside_quote = False         # parser inside quotation
         self._has_child = False
         self._oldbefore = ""               # buffer for tagname
@@ -142,8 +139,8 @@ class HsdParser:
             line0 = 0
         if self._inside_quote:
             self._error(UNCLOSED_QUOTATION_ERROR, (line0, self._currline))
-        elif self._inside_option:
-            self._error(UNCLOSED_OPTION_ERROR, (line0, self._currline))
+        elif self._inside_attrib:
+            self._error(UNCLOSED_ATTRIB_ERROR, (line0, self._currline))
         elif self._opened_tags:
             self._error(UNCLOSED_TAG_ERROR, (line0, line0))
         elif ("".join(self._buffer)).strip():
@@ -164,7 +161,7 @@ class HsdParser:
                     self._text("".join(self._buffer) + before.strip())
                     self._closetag()
                     self._after_equal_sign = False
-                elif not self._inside_option:
+                elif not self._inside_attrib:
                     self._buffer.append(before)
                 elif before.strip():
                     self._error(SYNTAX_ERROR, (self._currline, self._currline))
@@ -174,8 +171,8 @@ class HsdParser:
             elif before.endswith("\\") and not before.endswith("\\\\"):
                 self._buffer.append(before + sign)
 
-            # Equal sign outside option specification
-            elif sign == "=" and not self._inside_option:
+            # Equal sign
+            elif sign == "=":
                 # Ignore if followed by "{" (DFTB+ compatibility)
                 if after.lstrip().startswith("{"):
                     # _oldbefore may already contain the tagname, if the
@@ -187,20 +184,15 @@ class HsdParser:
                     self._starttag(before, False)
                     self._after_equal_sign = True
 
-            # Equal sign inside option specification
-            elif sign == "=":
-                self._key = before.strip()
-                self._buffer = []
-
             # Opening tag by curly brace
-            elif sign == "{" and not self._inside_option:
+            elif sign == "{":
                 self._has_child = True
                 self._starttag(before, self._after_equal_sign)
                 self._buffer = []
                 self._after_equal_sign = False
 
             # Closing tag by curly brace
-            elif sign == "}" and not self._inside_option:
+            elif sign == "}":
                 self._text("".join(self._buffer) + before)
                 self._buffer = []
                 # If 'test { a = 12 }' occurs, curly brace closes two tags
@@ -210,8 +202,7 @@ class HsdParser:
                 self._closetag()
 
             # Closing tag by semicolon
-            elif (sign == ";" and self._after_equal_sign
-                  and not self._inside_option):
+            elif sign == ";" and self._after_equal_sign:
                 self._after_equal_sign = False
                 self._text(before)
                 self._closetag()
@@ -221,23 +212,22 @@ class HsdParser:
                 self._buffer.append(before)
                 after = ""
 
-            # Opening option specification
-            elif sign == "[" and not self._inside_option:
+            # Opening attribute specification
+            elif sign == "[":
                 if "".join(self._buffer).strip():
                     self._error(SYNTAX_ERROR, (self._currline, self._currline))
                 self._oldbefore = before
                 self._buffer = []
-                self._inside_option = True
+                self._inside_attrib = True
                 self._key = ""
                 self._opened_tags.append(("[", self._currline, None))
-                self._checkstr = _OPTION_SPECIALS
+                self._checkstr = _ATTRIB_SPECIALS
 
-            # Closing option specification
-            elif sign == "]" and self._inside_option:
+            # Closing attribute specification
+            elif sign == "]":
                 value = "".join(self._buffer) + before
-                key = self._key.lower() if self._key else self._defattrib
-                self._options[key] = value.strip()
-                self._inside_option = False
+                self._attrib = value.strip()
+                self._inside_attrib = False
                 self._buffer = []
                 self._opened_tags.pop()
                 self._checkstr = _GENERAL_SPECIALS
@@ -256,15 +246,8 @@ class HsdParser:
                     self._buffer.append(before + sign)
                     self._opened_tags.append(('"', self._currline, None))
 
-            # Closing attribute specification
-            elif sign == "," and self._inside_option:
-                value = "".join(self._buffer) + before
-                key = self._key.lower() if self._key else self._defattrib
-                self._options[key] = value.strip()
-
             # Interrupt
-            elif (sign == "<" and not self._inside_option
-                  and not self._after_equal_sign):
+            elif sign == "<" and not self._after_equal_sign:
                 txtinc = after.startswith("<<")
                 hsdinc = after.startswith("<+")
                 if txtinc:
@@ -305,14 +288,14 @@ class HsdParser:
         self._hsdoptions[common.HSDATTR_LINE] = self._currline
         self._hsdoptions[common.HSDATTR_TAG] = tagname_stripped
         tagname_stripped = tagname_stripped.lower()
-        self._eventhandler.open_tag(tagname_stripped, self._options,
+        self._eventhandler.open_tag(tagname_stripped, self._attrib,
                                     self._hsdoptions)
         self._opened_tags.append(
             (tagname_stripped, self._currline, closeprev, self._has_child))
         self._buffer = []
         self._oldbefore = ""
         self._has_child = False
-        self._options = OrderedDict()
+        self._attrib = None
         self._hsdoptions = OrderedDict()
 
 
