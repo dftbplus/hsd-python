@@ -9,5 +9,5 @@
 Central module for the hsd package
 """
 from .dump import dump, dumps
-from .parser import HsdParser
+from .parser import HsdParser, HsdEventHandler
 from .dictbuilder import HsdDictBuilder

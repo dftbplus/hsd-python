@@ -12,7 +12,7 @@ from collections import OrderedDict
 import hsd.common as common
 
 
-__all__ = ["HsdParser",
+__all__ = ["HsdParser", "HsdEventHandler",
            "SYNTAX_ERROR", "UNCLOSED_TAG_ERROR", "UNCLOSED_OPTION_ERROR",
            "UNCLOSED_QUOTATION_ERROR", "ORPHAN_TEXT_ERROR"]
 
@@ -286,8 +286,8 @@ class HsdParser:
         if len(tagname_stripped.split()) > 1:
             self._error(SYNTAX_ERROR, (self._currline, self._currline))
         self._hsdoptions[common.HSDATTR_LINE] = self._currline
-        self._hsdoptions[common.HSDATTR_TAG] = tagname_stripped
-        tagname_stripped = tagname_stripped.lower()
+        #self._hsdoptions[common.HSDATTR_TAG] = tagname_stripped
+        #tagname_stripped = tagname_stripped.lower()
         self._eventhandler.open_tag(tagname_stripped, self._attrib,
                                     self._hsdoptions)
         self._opened_tags.append(
