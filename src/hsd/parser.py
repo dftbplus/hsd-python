@@ -13,7 +13,7 @@ import hsd.common as common
 
 
 __all__ = ["HsdParser",
-           "SYNTAX_ERROR", "UNCLOSED_TAG_ERROR", "UNCLOSED_OPTION_ERROR",
+           "SYNTAX_ERROR", "UNCLOSED_TAG_ERROR", "UNCLOSED_ATTRIB_ERROR",
            "UNCLOSED_QUOTATION_ERROR", "ORPHAN_TEXT_ERROR"]
 
 SYNTAX_ERROR = 1
@@ -99,15 +99,15 @@ class HsdParser:
         else:
             self._eventhandler = eventhandler
 
-        self._fname = ""                   # Name of file being processed
-        self._checkstr = _GENERAL_SPECIALS  # special characters to look for
+        self._fname = ""                   # name of file being processed
+        self._checkstr = _GENERAL_SPECIALS # special characters to look for
         self._oldcheckstr = ""             # buffer fo checkstr
         self._opened_tags = []             # info about opened tags
         self._buffer = []                  # buffering plain text between lines
         self._attrib = None                # attribute for current tag
         self._hsdoptions = OrderedDict()   # hsd-options for current tag
         self._currline = 0                 # nr. of current line in file
-        self._after_equal_sign = False    # last tag was opened with equal sign
+        self._after_equal_sign = False     # last tag was opened with equal sign
         self._inside_attrib = False        # parser inside attrib specification
         self._inside_quote = False         # parser inside quotation
         self._has_child = False
@@ -233,7 +233,7 @@ class HsdParser:
                 self._checkstr = _GENERAL_SPECIALS
 
             # Quoting strings
-            elif sign == "'" or sign == '"':
+            elif sign in ("'", '"'):
                 if self._inside_quote:
                     self._checkstr = self._oldcheckstr
                     self._inside_quote = False
@@ -311,8 +311,7 @@ class HsdParser:
 
     def _include_hsd(self, fname):
         fname = common.unquote(fname.strip())
-        parser = HsdParser(defattrib=self._defattrib,
-                           eventhandler=self._eventhandler)
+        parser = HsdParser(eventhandler=self._eventhandler)
         parser.feed(fname)
 
 
