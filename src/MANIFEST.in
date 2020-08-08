@@ -4,3 +4,4 @@ include versioneer.py
 
 graft hsd
 global-exclude *.py[cod] __pycache__ *.so
+include hsd/_version.py
