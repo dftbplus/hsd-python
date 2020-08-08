@@ -8,6 +8,16 @@ the Human-friendly Structured Data (HSD) format.
 It is licensed under the *BSD 2-clause license*.
 
 
+Installation
+============
+
+To install the python package in development mode use
+
+.. code::
+
+   pip install -e src
+
+
 The HSD format
 ==============
 
