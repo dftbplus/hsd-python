@@ -6,8 +6,8 @@
 #  See the LICENSE file for terms of usage and distribution.                   #
 #------------------------------------------------------------------------------#
 #
-import hsd
 import os.path as op
+import hsd
 
 def test_dictbuilder():
     dictbuilder = hsd.HsdDictBuilder()

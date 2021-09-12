@@ -9,10 +9,14 @@
 Provides functionality to dump Python structures to HSD
 """
 import io
-import numpy as np
-from .common import DEFAULT_ATTRIBUTE
-
-__all__ = ['dump', 'dumps']
+try:
+    import numpy as np
+except ModuleNotFoundError:
+    np = None
+from .common import \
+    ATTRIB_SUFFIX, HSD_ATTRIB_SUFFIX, LEN_ATTRIB_SUFFIX, LEN_HSD_ATTRIB_SUFFIX
+from .dictbuilder import HsdDictBuilder
+from .parser import HsdParser
 
 
 _INDENT_STR = "  "
@@ -24,17 +28,57 @@ _QUOTING_CHARS = "\"'"
 _SPECIAL_CHARS = "{}[]= "
 
 
-_ATTRIBUTE_SUFFIX = "." + DEFAULT_ATTRIBUTE
+def load(fobj):
+    """Loads a file like object with HSD-formatted data into a Python dictionary
+
+    Args:
+        fobj: File like object to read the data from
+
+    Returns:
+        Dictionary representing the HSD data.
+    """
+    dictbuilder = HsdDictBuilder()
+    parser = HsdParser(eventhandler=dictbuilder)
+    parser.feed(fobj)
+    return dictbuilder.hsddict
+
+
+def load_file(fname):
+    """Loads a file with HSD-formatted data into a Python dictionary
+
+    Args:
+        fname: Name of the text file to read the data from
+
+    Returns:
+        Dictionary representing the HSD data.
+    """
+    with open(fname, "r") as fobj:
+        return load(fobj)
+
+
+def load_string(hsdstr):
+    """Loads a string with HSD-formatted data into a Python dictionary.
+
+    Args:
+        hsdstr: String with HSD-formatted data.
+
+    Returns:
+        Dictionary representing the HSD data.
+    """
+    fobj = io.StringIO(hsdstr)
+    return load(fobj)
 
 
 def dump(obj, fobj):
     """Serializes an object to a file in HSD format.
 
     Args:
-        obj: Object to be serialized in HSD format
+        obj: Dictionary like object to be serialized in HSD format
         fobj: File like object to write the result to.
-    """
 
+    Raises:
+        TypeError: if object is not a dictionary instance.
+    """
     if isinstance(obj, dict):
         _dump_dict(obj, fobj, "")
     else:
@@ -42,7 +86,24 @@ def dump(obj, fobj):
         raise TypeError(msg)
 
 
-def dumps(obj):
+def dump_file(obj, fobj):
+    """Serializes an object to a file in HSD format.
+
+    Args:
+        obj: Dictionary like object to be serialized in HSD format
+        fobj: File like object to write the result to.
+
+    Raises:
+        TypeError: if object is not a dictionary instance.
+    """
+    if isinstance(obj, dict):
+        _dump_dict(obj, fobj, "")
+    else:
+        msg = "Invalid object type"
+        raise TypeError(msg)
+
+
+def dump_string(obj):
     """Serializes an object to string in HSD format.
 
     Args:
@@ -58,14 +119,20 @@ def dumps(obj):
 
 def _dump_dict(obj, fobj, indentstr):
     for key, value in obj.items():
-        if key.endswith(_ATTRIBUTE_SUFFIX):
-            if key[:-len(_ATTRIBUTE_SUFFIX)] in obj:
+        if key.endswith(ATTRIB_SUFFIX):
+            if key[:-LEN_ATTRIB_SUFFIX] in obj:
                 continue
             else:
                 msg = "Attribute '{}' without corresponding tag '{}'"\
-                      .format(key, key[:-len(_ATTRIBUTE_SUFFIX)])
+                      .format(key, key[:-len(ATTRIB_SUFFIX)])
                 raise ValueError(msg)
-        attrib = obj.get(key + _ATTRIBUTE_SUFFIX)
+        if key.endswith(HSD_ATTRIB_SUFFIX):
+            if key[:-LEN_HSD_ATTRIB_SUFFIX] in obj: continue
+            else:
+                msg = "HSD attribute '{}' without corresponding tag '{}'"\
+                      .format(key, key[:-len(HSD_ATTRIB_SUFFIX)])
+                raise ValueError(msg)
+        attrib = obj.get(key + ATTRIB_SUFFIX)
         if attrib is None:
             attribstr = ""
         elif not isinstance(attrib, str):
@@ -96,7 +163,7 @@ def _get_hsd_rhs(obj, indentstr):
 
     if isinstance(obj, list):
         objstr = _list_to_hsd(obj)
-    elif isinstance(obj, np.ndarray):
+    elif np is not None and isinstance(obj, np.ndarray):
         objstr = _list_to_hsd(obj.tolist())
     else:
         objstr = _item_to_hsd(obj)

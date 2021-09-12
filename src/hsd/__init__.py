@@ -8,6 +8,7 @@
 """
 Central module for the hsd package
 """
-from .dump import dump, dumps
-from .parser import HsdParser
 from .dictbuilder import HsdDictBuilder
+from .eventhandler import HsdEventHandler
+from .io import load, load_string, load_file, dump, dump_string, dump_file
+from .parser import HsdParser

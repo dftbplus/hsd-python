@@ -9,9 +9,8 @@
 Contains an event-driven builder for dictionary based (JSON-like) structure
 """
 import re
-from .parser import HsdEventHandler
-
-__all__ = ['HsdDictBuilder']
+from .common import ATTRIB_SUFFIX, HSD_ATTRIB_SUFFIX
+from .eventhandler import HsdEventHandler
 
 
 _TOKEN_PATTERN = re.compile(r"""
@@ -29,21 +28,24 @@ _TOKEN_PATTERN = re.compile(r"""
 class HsdDictBuilder(HsdEventHandler):
     """Deserializes HSD into nested dictionaries
 
-    Note: hsdoptions passed by the generating events are ignored.
+    Note: hsdattrib passed by the generating events are ignored.
     """
 
-    def __init__(self, flatten_data=False):
-        HsdEventHandler.__init__(self)
+    def __init__(self, flatten_data=False, include_hsd_attribs=False):
+        super().__init__()
         self._hsddict = {}
         self._curblock = self._hsddict
         self._parentblocks = []
         self._data = None
         self._flatten_data = flatten_data
+        self._include_hsd_attribs = include_hsd_attribs
 
 
-    def open_tag(self, tagname, attrib, hsdoptions):
+    def open_tag(self, tagname, attrib, hsdattrib):
         if attrib is not None:
-            self._curblock[tagname + '.attribute'] = attrib
+            self._curblock[tagname + ATTRIB_SUFFIX] = attrib
+        if self._include_hsd_attribs and hsdattrib is not None:
+            self._curblock[tagname + HSD_ATTRIB_SUFFIX] = hsdattrib
         self._parentblocks.append(self._curblock)
         self._curblock = {}
 

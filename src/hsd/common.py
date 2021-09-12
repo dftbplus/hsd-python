@@ -12,40 +12,10 @@ Implements common functionalities for the HSD package
 
 class HsdException(Exception):
     """Base class for exceptions in the HSD package."""
-    pass
-
-
-class HsdQueryError(HsdException):
-    """Base class for errors detected by the HsdQuery object.
-
-
-    Attributes:
-        filename: Name of the file where error occured (or empty string).
-        line: Line where the error occurred (or -1).
-        tag: Name of the tag with the error (or empty string).
-    """
-
-    def __init__(self, msg="", node=None):
-        """Initializes the exception.
-
-        Args:
-            msg: Error message
-            node: HSD element where error occured (optional).
-        """
-        super().__init__(msg)
-        if node is not None:
-            self.tag = node.gethsd(HSDATTR_TAG, node.tag)
-            self.file = node.gethsd(HSDATTR_FILE, -1)
-            self.line = node.gethsd(HSDATTR_LINE, None)
-        else:
-            self.tag = ""
-            self.file = -1
-            self.line = None
 
 
 class HsdParserError(HsdException):
     """Base class for parser related errors."""
-    pass
 
 
 def unquote(txt):
@@ -56,11 +26,23 @@ def unquote(txt):
 
 
 # Name for default attribute (when attribute name is not specified)
-DEFAULT_ATTRIBUTE = "attribute"
+DEFAULT_ATTRIBUTE = "unit"
+
+# Suffix to mark attribute
+ATTRIB_SUFFIX = ".attrib"
+
+# Length of the attribute suffix
+LEN_ATTRIB_SUFFIX = len(ATTRIB_SUFFIX)
+
+# Suffix to mark hsd processing attributes
+HSD_ATTRIB_SUFFIX = ".hsdattrib"
+
+# Lengths of hsd processing attribute suffix
+LEN_HSD_ATTRIB_SUFFIX = len(HSD_ATTRIB_SUFFIX)
 
 
-HSDATTR_PROC = "processed"
-HSDATTR_EQUAL = "equal"
-HSDATTR_FILE = "file"
-HSDATTR_LINE = "line"
-HSDATTR_TAG = "tag"
+HSD_ATTRIB_LINE = "line"
+
+HSD_ATTRIB_EQUAL = "equal"
+
+HSD_ATTRIB_TAG = "tag"
