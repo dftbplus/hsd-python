@@ -17,7 +17,7 @@ def test_dictbuilder():
     print("** Python structure without data flattening:\n")
     print(pyrep)
     print("\n** Turning back to HSD:\n")
-    print(hsd.dumps(pyrep))
+    print(hsd.dump_string(pyrep))
 
 
 def test_dictbuilder_flat():
@@ -29,7 +29,7 @@ def test_dictbuilder_flat():
     print("** Python structure with data flattening:\n")
     print(pyrep)
     print("\n** Turning back to HSD:\n")
-    print(hsd.dumps(pyrep))
+    print(hsd.dump_string(pyrep))
 
 
 if __name__ == '__main__':
