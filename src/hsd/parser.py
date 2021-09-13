@@ -1,13 +1,13 @@
 #------------------------------------------------------------------------------#
-#  hsd: package for manipulating HSD-formatted data                            #
-#  Copyright (C) 2011 - 2020  DFTB+ developers group                           #
-#                                                                              #
-#  See the LICENSE file for terms of usage and distribution.                   #
+#  hsd-python: package for manipulating HSD-formatted data in Python           #
+#  Copyright (C) 2011 - 2021  DFTB+ developers group                           #
+#  Licensed under the BSD 2-clause license.                                    #
 #------------------------------------------------------------------------------#
 #
 """
 Contains the event-generating HSD-parser.
 """
+from typing import Optional, TextIO, Union
 import hsd.common as common
 from .eventhandler import HsdEventHandler
 
@@ -26,11 +26,34 @@ _ATTRIB_SPECIALS = "]\"'"
 class HsdParser:
     """Event based parser for the HSD format.
 
-    The methods `open_tag()`, `close_tag()`, `add_text()`
-    and `_handle_error()` should be overridden by the actual application.
+    Arguments:
+        eventhandler: Object which should handle the HSD-events triggered
+            during parsing. When not specified, HsdEventHandler() is used.
+        lower_tag_names: Whether tag names should be lowered during parsing.
+            If the option is set, the original tag name will be stored among
+            the hsd attributes.
+
+    Examples:
+        >>> from io import StringIO
+        >>> dictbuilder = hsd.HsdDictBuilder()
+        >>> parser = hsd.HsdParser(eventhandler=dictbuilder)
+        >>> hsdfile = StringIO(\"\"\"
+        ... Hamiltonian {
+        ...     Dftb {
+        ...         Scc = Yes
+        ...         Filling = Fermi {
+        ...             Temperature [Kelvin] = 100
+        ...         }
+        ...     }
+        ... }
+        ... \"\"\")
+        >>> parser.feed(hsdfile)
+        >>> dictbuilder.hsddict
+        {'Hamiltonian': {'Dftb': {'Scc': True, 'Filling': {'Fermi': {'Temperature.attrib': 'Kelvin', 'Temperature': 100}}}}}
     """
 
-    def __init__(self, eventhandler=None, lower_tag_names=False):
+    def __init__(self, eventhandler: Optional[HsdEventHandler] = None,
+        lower_tag_names: bool = False):
         """Initializes the parser.
 
         Args:
@@ -57,8 +80,11 @@ class HsdParser:
         self._lower_tag_names = lower_tag_names
 
 
-    def feed(self, fobj):
+    def feed(self, fobj: Union[TextIO, str]):
         """Feeds the parser with data.
+
+        The parser will process the data and trigger the corresponding events
+        in the eventhandler which was passed at initialization.
 
         Args:
             fobj: File like object or name of a file containing the data.

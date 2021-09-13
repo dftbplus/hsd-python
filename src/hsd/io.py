@@ -1,8 +1,7 @@
 #------------------------------------------------------------------------------#
-#  hsd: package for manipulating HSD-formatted data                            #
-#  Copyright (C) 2011 - 2020  DFTB+ developers group                           #
-#                                                                              #
-#  See the LICENSE file for terms of usage and distribution.                   #
+#  hsd-python: package for manipulating HSD-formatted data in Python           #
+#  Copyright (C) 2011 - 2021  DFTB+ developers group                           #
+#  Licensed under the BSD 2-clause license.                                    #
 #------------------------------------------------------------------------------#
 #
 """
@@ -13,6 +12,8 @@ try:
     import numpy as np
 except ModuleNotFoundError:
     np = None
+from typing import Union, TextIO
+
 from .common import \
     ATTRIB_SUFFIX, HSD_ATTRIB_SUFFIX, LEN_ATTRIB_SUFFIX, LEN_HSD_ATTRIB_SUFFIX
 from .dictbuilder import HsdDictBuilder
@@ -28,35 +29,26 @@ _QUOTING_CHARS = "\"'"
 _SPECIAL_CHARS = "{}[]= "
 
 
-def load(fobj):
-    """Loads a file like object with HSD-formatted data into a Python dictionary
+def load(hsdfile: Union[TextIO, str]) -> dict:
+    """Loads a file with HSD-formatted data into a Python dictionary
 
     Args:
-        fobj: File like object to read the data from
+        hsdfile: Name of file or file like object to read the HSD data from
 
     Returns:
         Dictionary representing the HSD data.
     """
     dictbuilder = HsdDictBuilder()
     parser = HsdParser(eventhandler=dictbuilder)
-    parser.feed(fobj)
+    if isinstance(hsdfile, str):
+        with open(hsdfile, "r") as hsdfile:
+            parser.feed(hsdfile)
+    else:
+        parser.feed(hsdfile)
     return dictbuilder.hsddict
 
 
-def load_file(fname):
-    """Loads a file with HSD-formatted data into a Python dictionary
-
-    Args:
-        fname: Name of the text file to read the data from
-
-    Returns:
-        Dictionary representing the HSD data.
-    """
-    with open(fname, "r") as fobj:
-        return load(fobj)
-
-
-def load_string(hsdstr):
+def load_string(hsdstr: str) -> dict:
     """Loads a string with HSD-formatted data into a Python dictionary.
 
     Args:
@@ -64,56 +56,72 @@ def load_string(hsdstr):
 
     Returns:
         Dictionary representing the HSD data.
+
+    Examples:
+        >>> hsdstr = \"\"\"
+        ... Dftb {
+        ...   Scc = Yes
+        ...   Filling {
+        ...     Fermi {
+        ...       Temperature [Kelvin] = 100
+        ...     }
+        ...   }
+        ... }
+        ... \"\"\"
+        >>> hsd.load_string(hsdstr)
+        {'Dftb': {'Scc': True, 'Filling': {'Fermi': {'Temperature.attrib': 'Kelvin', 'Temperature': 100}}}}
     """
     fobj = io.StringIO(hsdstr)
     return load(fobj)
 
 
-def dump(obj, fobj):
-    """Serializes an object to a file in HSD format.
+def dump(data: dict, hsdfile: Union[TextIO, str]):
+    """Dumps data to a file in HSD format.
 
     Args:
-        obj: Dictionary like object to be serialized in HSD format
-        fobj: File like object to write the result to.
+        data: Dictionary like object to be written in HSD format
+        hsdfile: Name of file or file like object to write the result to.
 
     Raises:
         TypeError: if object is not a dictionary instance.
     """
-    if isinstance(obj, dict):
-        _dump_dict(obj, fobj, "")
-    else:
+    if not isinstance(data, dict):
         msg = "Invalid object type"
         raise TypeError(msg)
-
-
-def dump_file(obj, fobj):
-    """Serializes an object to a file in HSD format.
-
-    Args:
-        obj: Dictionary like object to be serialized in HSD format
-        fobj: File like object to write the result to.
-
-    Raises:
-        TypeError: if object is not a dictionary instance.
-    """
-    if isinstance(obj, dict):
-        _dump_dict(obj, fobj, "")
+    if isinstance(hsdfile, str):
+        with open(hsdfile, "w") as hsdfile:
+            _dump_dict(data, hsdfile, "")
     else:
-        msg = "Invalid object type"
-        raise TypeError(msg)
+        _dump_dict(data, hsdfile, "")
 
 
-def dump_string(obj):
+def dump_string(data) -> str:
     """Serializes an object to string in HSD format.
 
     Args:
-        obj: Object to serialize.
+        data: Dictionary like object to be written in HSD format.
 
     Returns:
         HSD formatted string.
+
+    Examples:
+        >>> hsdtree = {
+        ...     'Dftb': {
+        ...         'Scc': True,
+        ...         'Filling': {
+        ...             'Fermi': {
+        ...                 'Temperature': 100,
+        ...                 'Temperature.attrib': 'Kelvin'
+        ...             }
+        ...         }
+        ...     }
+        ... }
+        >>> hsd.dump_string(hsdtree)
+        'Dftb {\\n  Scc = Yes\\n  Filling {\\n    Fermi {\\n      Temperature [Kelvin] = 100\\n    }\\n  }\\n}\\n'
+
     """
     result = io.StringIO()
-    dump(obj, result)
+    dump(data, result)
     return result.getvalue()
 
 

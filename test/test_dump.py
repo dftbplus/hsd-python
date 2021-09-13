@@ -1,9 +1,8 @@
 #!/bin/env python3
 #------------------------------------------------------------------------------#
-#  hsd: package for manipulating HSD-formatted data                            #
-#  Copyright (C) 2011 - 2020  DFTB+ developers group                           #
-#                                                                              #
-#  See the LICENSE file for terms of usage and distribution.                   #
+#  hsd-python: package for manipulating HSD-formatted data in Python           #
+#  Copyright (C) 2011 - 2021  DFTB+ developers group                           #
+#  Licensed under the BSD 2-clause license.                                    #
 #------------------------------------------------------------------------------#
 #
 import numpy as np
@@ -59,4 +58,4 @@ if __name__ == "__main__":
             }
         }
     }
-    print(hsd.dumps(INPUT))
+    print(hsd.dump_string(INPUT))

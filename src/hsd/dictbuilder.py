@@ -1,8 +1,7 @@
 #------------------------------------------------------------------------------#
-#  hsd: package for manipulating HSD-formatted data                            #
-#  Copyright (C) 2011 - 2020  DFTB+ developers group                           #
-#                                                                              #
-#  See the LICENSE file for terms of usage and distribution.                   #
+#  hsd-python: package for manipulating HSD-formatted data in Python           #
+#  Copyright (C) 2011 - 2021  DFTB+ developers group                           #
+#  Licensed under the BSD 2-clause license.                                    #
 #------------------------------------------------------------------------------#
 #
 """
@@ -26,12 +25,19 @@ _TOKEN_PATTERN = re.compile(r"""
 
 
 class HsdDictBuilder(HsdEventHandler):
-    """Deserializes HSD into nested dictionaries
+    """Specific HSD event handler, which builds a nested Python dictionary.
 
-    Note: hsdattrib passed by the generating events are ignored.
+    Args:
+        flatten_data: Whether multiline data in the HSD input should be
+            flattened into a single list. Othewise a list of lists is created,
+            with one list for every line (default).
+        include_hsd_attribs: Whether the HSD-attributes (processing related
+            attributes, like original tag name, line information, etc.) should
+            be stored.
     """
 
-    def __init__(self, flatten_data=False, include_hsd_attribs=False):
+    def __init__(self, flatten_data: bool = False,
+                 include_hsd_attribs: bool = False):
         super().__init__()
         self._hsddict = {}
         self._curblock = self._hsddict
@@ -39,6 +45,12 @@ class HsdDictBuilder(HsdEventHandler):
         self._data = None
         self._flatten_data = flatten_data
         self._include_hsd_attribs = include_hsd_attribs
+
+
+    @property
+    def hsddict(self):
+        """The dictionary which has been built"""
+        return self._hsddict
 
 
     def open_tag(self, tagname, attrib, hsdattrib):
@@ -70,12 +82,6 @@ class HsdDictBuilder(HsdEventHandler):
 
     def add_text(self, text):
         self._data = self._text_to_data(text)
-
-
-    @property
-    def hsddict(self):
-        """Returns the dictionary which has been built"""
-        return self._hsddict
 
 
     def _text_to_data(self, txt):
