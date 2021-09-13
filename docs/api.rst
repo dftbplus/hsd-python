@@ -10,13 +10,13 @@ API documentation
 High level routines
 ===================
 
-.. autofunction:: hsd.load
-
 .. autofunction:: hsd.load_string
 
-.. autofunction:: hsd.dump
+.. autofunction:: hsd.load
 
 .. autofunction:: hsd.dump_string
+
+.. autofunction:: hsd.dump
 
 
 

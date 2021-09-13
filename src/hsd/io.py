@@ -1,4 +1,3 @@
-#------------------------------------------------------------------------------#
 #  hsd-python: package for manipulating HSD-formatted data in Python           #
 #  Copyright (C) 2011 - 2021  DFTB+ developers group                           #
 #  Licensed under the BSD 2-clause license.                                    #
@@ -29,17 +28,33 @@ _QUOTING_CHARS = "\"'"
 _SPECIAL_CHARS = "{}[]= "
 
 
-def load(hsdfile: Union[TextIO, str]) -> dict:
+def load(hsdfile: Union[TextIO, str], lower_tag_names: bool = False,
+         include_hsd_attribs: bool = False, flatten_data: bool = False) -> dict:
     """Loads a file with HSD-formatted data into a Python dictionary
 
     Args:
         hsdfile: Name of file or file like object to read the HSD data from
+        lower_tag_names: When set, all tag names will be converted to lower-case
+            (practical, when input should be treated case insensitive.) If
+            ``include_hsd_attribs`` is set, the original tag name will be
+            stored among the HSD attributes.
+        include_hsd_attribs: Whether the HSD-attributes (processing related
+            attributes, like original tag name, line information, etc.) should
+            be stored.
+        flatten_data: Whether multiline data in the HSD input should be
+            flattened into a single list. Othewise a list of lists is created,
+            with one list for every line (default).
 
     Returns:
         Dictionary representing the HSD data.
+
+    Examples:
+        See :func:`hsd.load_string` for examples of usage.
     """
-    dictbuilder = HsdDictBuilder()
-    parser = HsdParser(eventhandler=dictbuilder)
+    dictbuilder = HsdDictBuilder(flatten_data=flatten_data,
+                                 include_hsd_attribs=include_hsd_attribs)
+    parser = HsdParser(eventhandler=dictbuilder,
+                       lower_tag_names=lower_tag_names)
     if isinstance(hsdfile, str):
         with open(hsdfile, "r") as hsdfile:
             parser.feed(hsdfile)
@@ -48,11 +63,22 @@ def load(hsdfile: Union[TextIO, str]) -> dict:
     return dictbuilder.hsddict
 
 
-def load_string(hsdstr: str) -> dict:
+def load_string(hsdstr: str, lower_tag_names: bool = False,
+         include_hsd_attribs: bool = False, flatten_data: bool = False) -> dict:
     """Loads a string with HSD-formatted data into a Python dictionary.
 
     Args:
         hsdstr: String with HSD-formatted data.
+        lower_tag_names: When set, all tag names will be converted to lower-case
+            (practical, when input should be treated case insensitive.) If
+            ``include_hsd_attribs`` is set, the original tag name will be
+            stored among the HSD attributes.
+        include_hsd_attribs: Whether the HSD-attributes (processing related
+            attributes, like original tag name, line information, etc.) should
+            be stored.
+        flatten_data: Whether multiline data in the HSD input should be
+            flattened into a single list. Othewise a list of lists is created,
+            with one list for every line (default).
 
     Returns:
         Dictionary representing the HSD data.
@@ -70,36 +96,81 @@ def load_string(hsdstr: str) -> dict:
         ... \"\"\"
         >>> hsd.load_string(hsdstr)
         {'Dftb': {'Scc': True, 'Filling': {'Fermi': {'Temperature.attrib': 'Kelvin', 'Temperature': 100}}}}
+
+        In order to ease the case-insensitive handling of the input, the tag
+        names can be converted to lower case during reading using the
+        ``lower_tag_names`` option.
+
+        >>> hsd.load_string(hsdstr, lower_tag_names=True)
+        {'dftb': {'scc': True, 'filling': {'fermi': {'temperature.attrib': 'Kelvin', 'temperature': 100}}}}
+
+        The original tag names (together with additional information like the
+        line number of a tag) can be recorded, if the ``include_hsd_attribs``
+        option is set:
+
+        >>> data = hsd.load_string(hsdstr, lower_tag_names=True, include_hsd_attribs=True)
+
+        Each tag in the dictionary will have a corresponding ".hsdattrib" entry
+        with the recorded data:
+
+        >>> data["dftb.hsdattrib"]
+        {'line': 1, 'tag': 'Dftb'}
+
+        This additional data can be then also used to format the tags in the
+        original style, when writing the data in HSD-format again. Compare:
+
+        >>> hsd.dump_string(data)
+        'dftb {\\n  scc = Yes\\n  filling {\\n    fermi {\\n      temperature [Kelvin] = 100\\n    }\\n  }\\n}\\n'
+
+        versus
+
+        >>> hsd.dump_string(data, use_hsd_attribs=True)
+        'Dftb {\\n  Scc = Yes\\n  Filling {\\n    Fermi {\\n      Temperature [Kelvin] = 100\\n    }\\n  }\\n}\\n'
+
     """
     fobj = io.StringIO(hsdstr)
-    return load(fobj)
+    return load(fobj, lower_tag_names, include_hsd_attribs, flatten_data)
 
 
-def dump(data: dict, hsdfile: Union[TextIO, str]):
+def dump(data: dict, hsdfile: Union[TextIO, str],
+         use_hsd_attribs: bool = False):
     """Dumps data to a file in HSD format.
 
     Args:
         data: Dictionary like object to be written in HSD format
         hsdfile: Name of file or file like object to write the result to.
+        use_hsd_attribs: Whether HSD attributes in the data structure should
+            be used to format the output.
+
+            This option can be used to for example to restore original tag
+            names, if the file was loaded with the ``lower_tag_names`` and
+            ``include_hsd_attribs`` options set.
 
     Raises:
         TypeError: if object is not a dictionary instance.
+
+    Examples:
+
+        See :func:`hsd.load_string` for an example.
     """
     if not isinstance(data, dict):
         msg = "Invalid object type"
         raise TypeError(msg)
     if isinstance(hsdfile, str):
         with open(hsdfile, "w") as hsdfile:
-            _dump_dict(data, hsdfile, "")
+            _dump_dict(data, hsdfile, "", use_hsd_attribs=use_hsd_attribs)
     else:
-        _dump_dict(data, hsdfile, "")
+        _dump_dict(data, hsdfile, "", use_hsd_attribs=use_hsd_attribs)
 
 
-def dump_string(data) -> str:
+def dump_string(data: dict, use_hsd_attribs: bool = False) -> str:
     """Serializes an object to string in HSD format.
 
     Args:
         data: Dictionary like object to be written in HSD format.
+        use_hsd_attribs: Whether HSD attributes of the data structure should
+            be used to format the output (e.g. to restore original mixed case
+            tag names)
 
     Returns:
         HSD formatted string.
@@ -119,13 +190,15 @@ def dump_string(data) -> str:
         >>> hsd.dump_string(hsdtree)
         'Dftb {\\n  Scc = Yes\\n  Filling {\\n    Fermi {\\n      Temperature [Kelvin] = 100\\n    }\\n  }\\n}\\n'
 
+        See also :func:`hsd.load_string` for an example.
+
     """
     result = io.StringIO()
-    dump(data, result)
+    dump(data, result, use_hsd_attribs=use_hsd_attribs)
     return result.getvalue()
 
 
-def _dump_dict(obj, fobj, indentstr):
+def _dump_dict(obj, fobj, indentstr, use_hsd_attribs):
     for key, value in obj.items():
         if key.endswith(ATTRIB_SUFFIX):
             if key[:-LEN_ATTRIB_SUFFIX] in obj:
@@ -149,17 +222,23 @@ def _dump_dict(obj, fobj, indentstr):
             raise ValueError(msg)
         else:
             attribstr = " [" + attrib + "]"
+        if use_hsd_attribs:
+            hsdattribs = obj.get(key + HSD_ATTRIB_SUFFIX)
+            if hsdattribs is not None:
+                key = hsdattribs.get("tag", key)
         if isinstance(value, dict):
             if value:
                 fobj.write("{}{}{} {{\n".format(indentstr, key, attribstr))
-                _dump_dict(value, fobj, indentstr + _INDENT_STR)
+                _dump_dict(
+                    value, fobj, indentstr + _INDENT_STR, use_hsd_attribs)
                 fobj.write("{}}}\n".format(indentstr))
             else:
                 fobj.write("{}{}{} {{}}\n".format(indentstr, key, attribstr))
         elif isinstance(value, list) and value and isinstance(value[0], dict):
             for item in value:
                 fobj.write("{}{}{} {{\n".format(indentstr, key, attribstr))
-                _dump_dict(item, fobj, indentstr + _INDENT_STR)
+                _dump_dict(
+                    item, fobj, indentstr + _INDENT_STR, use_hsd_attribs)
                 fobj.write("{}}}\n".format(indentstr))
         else:
             valstr = _get_hsd_rhs(value, indentstr)

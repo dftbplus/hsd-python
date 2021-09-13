@@ -74,7 +74,7 @@ A typical, self-explaining input written in HSD looks like ::
 The above input can be parsed into a Python dictionary with::
 
   import hsd
-  hsdinput = hsd.load_file("test.hsd")
+  hsdinput = hsd.load("test.hsd")
 
 The dictionary ``hsdinput`` will then look as::
 
@@ -117,7 +117,7 @@ Python ::
 
 and then stored again in HSD format ::
 
-    hsd.dump_file(hsdinput, "test2.hsd")
+    hsd.dump(hsdinput, "test2.hsd")
 
 
 License
