@@ -14,7 +14,7 @@ except ModuleNotFoundError:
 from typing import Union, TextIO
 
 from .common import \
-    ATTRIB_SUFFIX, HSD_ATTRIB_SUFFIX, LEN_ATTRIB_SUFFIX, LEN_HSD_ATTRIB_SUFFIX
+    ATTRIB_SUFFIX, HSD_ATTRIB_SUFFIX, HSD_ATTRIB_EQUAL, HSD_ATTRIB_TAG
 from .dictbuilder import HsdDictBuilder
 from .parser import HsdParser
 
@@ -40,7 +40,10 @@ def load(hsdfile: Union[TextIO, str], lower_tag_names: bool = False,
             stored among the HSD attributes.
         include_hsd_attribs: Whether the HSD-attributes (processing related
             attributes, like original tag name, line information, etc.) should
-            be stored.
+            be stored. Use it, if you wish to keep the formatting of the data
+            on writing close to the original one (e.g. lowered tag names
+            converted back to their original form, equal signs between parent
+            and only child kept, instead of converted to curly braces).
         flatten_data: Whether multiline data in the HSD input should be
             flattened into a single list. Othewise a list of lists is created,
             with one list for every line (default).
@@ -75,7 +78,10 @@ def load_string(hsdstr: str, lower_tag_names: bool = False,
             stored among the HSD attributes.
         include_hsd_attribs: Whether the HSD-attributes (processing related
             attributes, like original tag name, line information, etc.) should
-            be stored.
+            be stored. Use it, if you wish to keep the formatting of the data
+            on writing close to the original one (e.g. lowered tag names
+            converted back to their original form, equal signs between parent
+            and only child kept, instead of converted to curly braces).
         flatten_data: Whether multiline data in the HSD input should be
             flattened into a single list. Othewise a list of lists is created,
             with one list for every line (default).
@@ -144,7 +150,8 @@ def dump(data: dict, hsdfile: Union[TextIO, str],
 
             This option can be used to for example to restore original tag
             names, if the file was loaded with the ``lower_tag_names`` and
-            ``include_hsd_attribs`` options set.
+            ``include_hsd_attribs`` options set or keep the equal signs
+            between parent and contained only child.
 
     Raises:
         TypeError: if object is not a dictionary instance.
@@ -198,21 +205,13 @@ def dump_string(data: dict, use_hsd_attribs: bool = False) -> str:
     return result.getvalue()
 
 
-def _dump_dict(obj, fobj, indentstr, use_hsd_attribs):
+def _dump_dict(obj, fobj, indentstr, use_hsd_attribs, continued=False):
+
     for key, value in obj.items():
-        if key.endswith(ATTRIB_SUFFIX):
-            if key[:-LEN_ATTRIB_SUFFIX] in obj:
-                continue
-            else:
-                msg = "Attribute '{}' without corresponding tag '{}'"\
-                      .format(key, key[:-len(ATTRIB_SUFFIX)])
-                raise ValueError(msg)
-        if key.endswith(HSD_ATTRIB_SUFFIX):
-            if key[:-LEN_HSD_ATTRIB_SUFFIX] in obj: continue
-            else:
-                msg = "HSD attribute '{}' without corresponding tag '{}'"\
-                      .format(key, key[:-len(HSD_ATTRIB_SUFFIX)])
-                raise ValueError(msg)
+
+        if key.endswith(ATTRIB_SUFFIX) or key.endswith(HSD_ATTRIB_SUFFIX):
+            continue
+
         attrib = obj.get(key + ATTRIB_SUFFIX)
         if attrib is None:
             attribstr = ""
@@ -222,28 +221,39 @@ def _dump_dict(obj, fobj, indentstr, use_hsd_attribs):
             raise ValueError(msg)
         else:
             attribstr = " [" + attrib + "]"
+
         if use_hsd_attribs:
             hsdattribs = obj.get(key + HSD_ATTRIB_SUFFIX)
-            if hsdattribs is not None:
-                key = hsdattribs.get("tag", key)
+        else:
+            hsdattribs = None
+
+        key = hsdattribs.get(HSD_ATTRIB_TAG, key) if hsdattribs else key
+        firstindent = "" if continued else indentstr
+        nextcontinued = hsdattribs.get(HSD_ATTRIB_EQUAL) if hsdattribs else None
         if isinstance(value, dict):
             if value:
-                fobj.write("{}{}{} {{\n".format(indentstr, key, attribstr))
-                _dump_dict(
-                    value, fobj, indentstr + _INDENT_STR, use_hsd_attribs)
-                fobj.write("{}}}\n".format(indentstr))
+                if nextcontinued:
+                    fobj.write("{}{}{} = ".format(firstindent, key, attribstr))
+                    _dump_dict(
+                        value, fobj, indentstr, use_hsd_attribs, continued=True)
+                else:
+                    fobj.write("{}{}{} {{\n"\
+                        .format(firstindent, key, attribstr))
+                    _dump_dict(
+                        value, fobj, indentstr + _INDENT_STR, use_hsd_attribs)
+                    fobj.write("{}}}\n".format(indentstr))
             else:
-                fobj.write("{}{}{} {{}}\n".format(indentstr, key, attribstr))
+                fobj.write("{}{}{} {{}}\n".format(firstindent, key, attribstr))
         elif isinstance(value, list) and value and isinstance(value[0], dict):
             for item in value:
-                fobj.write("{}{}{} {{\n".format(indentstr, key, attribstr))
+                fobj.write("{}{}{} {{\n".format(firstindent, key, attribstr))
                 _dump_dict(
                     item, fobj, indentstr + _INDENT_STR, use_hsd_attribs)
                 fobj.write("{}}}\n".format(indentstr))
         else:
             valstr = _get_hsd_rhs(value, indentstr)
             fobj.write("{}{}{} {}\n"\
-                     .format(indentstr, key, attribstr, valstr))
+                     .format(firstindent, key, attribstr, valstr))
 
 
 def _get_hsd_rhs(obj, indentstr):
@@ -256,7 +266,7 @@ def _get_hsd_rhs(obj, indentstr):
         objstr = _item_to_hsd(obj)
     if "\n" in objstr:
         newline_indent = "\n" + indentstr + _INDENT_STR
-        rhs = ("= {" + newline_indent + objstr.replace("\n", newline_indent)
+        rhs = ("{" + newline_indent + objstr.replace("\n", newline_indent)
                + "\n" + indentstr + "}")
     else:
         rhs = "= " + objstr
