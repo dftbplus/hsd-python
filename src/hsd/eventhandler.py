@@ -8,21 +8,16 @@
 Contains an event handler base class.
 """
 
-
-class HsdEventHandler:
-    """Base class for event handlers.
-
-    This specifc implemenation prints the events. Subclassing instances
-    should override the public methods to customize its behavior.
-    """
-
-    def __init__(self):
-        """Initializes the default event handler"""
-        self._indentlevel = 0
-        self._indentstr = "  "
+from abc import ABC, abstractmethod
+from typing import Optional
 
 
-    def open_tag(self, tagname: str, attrib: str, hsdattrib: dict):
+class HsdEventHandler(ABC):
+    """Abstract base class for handling HSD events."""
+
+    @abstractmethod
+    def open_tag(self, tagname: str, attrib: Optional[str],
+                 hsdattrib: Optional[dict]):
         """Opens a tag.
 
         Args:
@@ -31,29 +26,52 @@ class HsdEventHandler:
             hsdattrib: Dictionary of the options created during the processing
                 in the hsd-parser.
         """
-        indentstr = self._indentlevel * self._indentstr
-        print("{}OPENING TAG: {}".format(indentstr, tagname))
-        print("{}ATTRIBUTE: {}".format(indentstr, attrib))
-        print("{}HSD ATTRIBUTE: {}".format(indentstr, str(hsdattrib)))
-        self._indentlevel += 1
 
-
+    @abstractmethod
     def close_tag(self, tagname: str):
         """Closes a tag.
 
         Args:
             tagname: Name of the tag which had been closed.
         """
-        indentstr = self._indentlevel * self._indentstr
-        print("{}CLOSING TAG: {}".format(indentstr, tagname))
-        self._indentlevel -= 1
 
-
+    @abstractmethod
     def add_text(self, text: str):
         """Adds text (data) to the current tag.
 
         Args:
            text: Text in the current tag.
         """
+
+
+
+class HsdEventPrinter(HsdEventHandler):
+    """Mininal demonstration class for event handlers.
+
+    This specifc implemenation prints the events. Subclassing instances
+    should override the public methods to customize its behavior.
+    """
+
+    def __init__(self):
+        """Initializes the default event printer."""
+        self._indentlevel = 0
+        self._indentstr = "  "
+
+
+    def open_tag(self, tagname: str, attrib: str, hsdattrib: dict):
         indentstr = self._indentlevel * self._indentstr
-        print("{}Received text: {}".format(indentstr, text))
+        print(f"{indentstr}OPENING TAG: {tagname}")
+        print(f"{indentstr}ATTRIBUTE: {attrib}")
+        print(f"{indentstr}HSD ATTRIBUTE: {str(hsdattrib)}")
+        self._indentlevel += 1
+
+
+    def close_tag(self, tagname: str):
+        self._indentlevel -= 1
+        indentstr = self._indentlevel * self._indentstr
+        print(f"{indentstr}CLOSING TAG: {tagname}")
+
+
+    def add_text(self, text: str):
+        indentstr = self._indentlevel * self._indentstr
+        print(f"{indentstr}Received text: {text}")

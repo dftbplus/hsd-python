@@ -19,7 +19,6 @@ High level routines
 .. autofunction:: hsd.dump
 
 
-
 Lower level building blocks
 ===========================
 
@@ -30,4 +29,10 @@ Lower level building blocks
     :members:
 
 .. autoclass:: hsd.HsdDictBuilder
+    :members:
+
+.. autoclass:: hsd.HsdDictWalker
+    :members:
+
+.. autoclass:: hsd.HsdFormatter
     :members:

@@ -9,7 +9,7 @@ Contains the event-generating HSD-parser.
 """
 from typing import Optional, TextIO, Union
 import hsd.common as common
-from .eventhandler import HsdEventHandler
+from .eventhandler import HsdEventHandler, HsdEventPrinter
 
 
 SYNTAX_ERROR = 1
@@ -28,7 +28,7 @@ class HsdParser:
 
     Arguments:
         eventhandler: Object which should handle the HSD-events triggered
-            during parsing. When not specified, HsdEventHandler() is used.
+            during parsing. When not specified, HsdEventPrinter() is used.
         lower_tag_names: Whether tag names should be lowered during parsing.
             If the option is set, the original tag name will be stored among
             the hsd attributes.
@@ -47,7 +47,7 @@ class HsdParser:
         ...     }
         ... }
         ... \"\"\")
-        >>> parser.feed(hsdfile)
+        >>> parser.parse(hsdfile)
         >>> dictbuilder.hsddict
         {'Hamiltonian': {'Dftb': {'Scc': True, 'Filling': {'Fermi': {'Temperature.attrib': 'Kelvin', 'Temperature': 100}}}}}
     """
@@ -60,7 +60,7 @@ class HsdParser:
             eventhandler: Instance of the HsdEventHandler class or its children.
         """
         if eventhandler is None:
-            self._eventhandler = HsdEventHandler()
+            self._eventhandler = HsdEventPrinter()
         else:
             self._eventhandler = eventhandler
 
@@ -80,8 +80,8 @@ class HsdParser:
         self._lower_tag_names = lower_tag_names
 
 
-    def feed(self, fobj: Union[TextIO, str]):
-        """Feeds the parser with data.
+    def parse(self, fobj: Union[TextIO, str]):
+        """Parses the provided file like object.
 
         The parser will process the data and trigger the corresponding events
         in the eventhandler which was passed at initialization.
@@ -280,7 +280,7 @@ class HsdParser:
     def _include_hsd(self, fname):
         fname = common.unquote(fname.strip())
         parser = HsdParser(eventhandler=self._eventhandler)
-        parser.feed(fname)
+        parser.parse(fname)
 
 
     @staticmethod

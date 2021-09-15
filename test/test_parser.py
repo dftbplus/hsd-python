@@ -12,7 +12,7 @@ import os.path as op
 def test_parser():
     parser = hsd.HsdParser()
     with open(op.join(op.dirname(__file__), "test.hsd"), "r") as fobj:
-        parser.feed(fobj)
+        parser.parse(fobj)
 
 
 if __name__ == '__main__':
