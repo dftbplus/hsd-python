@@ -4,6 +4,8 @@ on: [push, pull_request]
 jobs:
   test-new:
 
+    runs-on: ubuntu-latest
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -13,7 +15,10 @@ jobs:
         python-version: '3.x'
 
     - name: Install requirements (PIP)
-      run: pip3 install pytest sphinx
+      run: pip3 install pytest sphinx numpy
+
+    - name: Setup up PYTHONPATH
+      run: echo "PYTHONPATH=${PWD}/src" >> $GITHUB_ENV
 
     - name: Run test pytest
       run: python3 -m pytest
