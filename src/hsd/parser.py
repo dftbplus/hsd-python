@@ -1,20 +1,16 @@
 #------------------------------------------------------------------------------#
-#  hsd: package for manipulating HSD-formatted data                            #
-#  Copyright (C) 2011 - 2020  DFTB+ developers group                           #
-#                                                                              #
-#  See the LICENSE file for terms of usage and distribution.                   #
+#  hsd-python: package for manipulating HSD-formatted data in Python           #
+#  Copyright (C) 2011 - 2021  DFTB+ developers group                           #
+#  Licensed under the BSD 2-clause license.                                    #
 #------------------------------------------------------------------------------#
 #
 """
 Contains the event-generating HSD-parser.
 """
-from collections import OrderedDict
+from typing import Optional, TextIO, Union
 import hsd.common as common
+from .eventhandler import HsdEventHandler
 
-
-__all__ = ["HsdParser",
-           "SYNTAX_ERROR", "UNCLOSED_TAG_ERROR", "UNCLOSED_ATTRIB_ERROR",
-           "UNCLOSED_QUOTATION_ERROR", "ORPHAN_TEXT_ERROR"]
 
 SYNTAX_ERROR = 1
 UNCLOSED_TAG_ERROR = 2
@@ -23,72 +19,41 @@ UNCLOSED_QUOTATION_ERROR = 4
 ORPHAN_TEXT_ERROR = 5
 
 _GENERAL_SPECIALS = "{}[]<=\"'#;"
+
 _ATTRIB_SPECIALS = "]\"'"
-
-
-class HsdEventHandler:
-    """Base class for event handler implementing simple printing"""
-
-    def __init__(self):
-        """Initializes the default event handler"""
-        self._indentlevel = 0
-        self._indentstr = "  "
-
-
-    def open_tag(self, tagname, attrib, hsdoptions):
-        """Handler which is called when a tag is opened.
-
-        It should be overriden in the application to handle the event in a
-        customized way.
-
-        Args:
-            tagname: Name of the tag which had been opened.
-            attrib: String containing the attribute of the tag or None.
-            hsdoptions: Dictionary of the options created during the processing
-                in the hsd-parser.
-        """
-        indentstr = self._indentlevel * self._indentstr
-        print("{}OPENING TAG: {}".format(indentstr, tagname))
-        print("{}ATTRIBUTE: {}".format(indentstr, attrib))
-        print("{}HSD OPTIONS: {}".format(indentstr, str(hsdoptions)))
-        self._indentlevel += 1
-
-
-    def close_tag(self, tagname):
-        """Handler which is called when a tag is closed.
-
-        It should be overriden in the application to handle the event in a
-        customized way.
-
-        Args:
-            tagname: Name of the tag which had been closed.
-        """
-        indentstr = self._indentlevel * self._indentstr
-        print("{}CLOSING TAG: {}".format(indentstr, tagname))
-        self._indentlevel -= 1
-
-
-    def add_text(self, text):
-        """Handler which is called with the text found inside a tag.
-
-        It should be overriden in the application to handle the event in a
-        customized way.
-
-        Args:
-           text: Text in the current tag.
-        """
-        indentstr = self._indentlevel * self._indentstr
-        print("{}Received text: {}".format(indentstr, text))
 
 
 class HsdParser:
     """Event based parser for the HSD format.
 
-    The methods `open_tag()`, `close_tag()`, `add_text()`
-    and `_handle_error()` should be overridden by the actual application.
+    Arguments:
+        eventhandler: Object which should handle the HSD-events triggered
+            during parsing. When not specified, HsdEventHandler() is used.
+        lower_tag_names: Whether tag names should be lowered during parsing.
+            If the option is set, the original tag name will be stored among
+            the hsd attributes.
+
+    Examples:
+        >>> from io import StringIO
+        >>> dictbuilder = hsd.HsdDictBuilder()
+        >>> parser = hsd.HsdParser(eventhandler=dictbuilder)
+        >>> hsdfile = StringIO(\"\"\"
+        ... Hamiltonian {
+        ...     Dftb {
+        ...         Scc = Yes
+        ...         Filling = Fermi {
+        ...             Temperature [Kelvin] = 100
+        ...         }
+        ...     }
+        ... }
+        ... \"\"\")
+        >>> parser.feed(hsdfile)
+        >>> dictbuilder.hsddict
+        {'Hamiltonian': {'Dftb': {'Scc': True, 'Filling': {'Fermi': {'Temperature.attrib': 'Kelvin', 'Temperature': 100}}}}}
     """
 
-    def __init__(self, eventhandler=None):
+    def __init__(self, eventhandler: Optional[HsdEventHandler] = None,
+        lower_tag_names: bool = False):
         """Initializes the parser.
 
         Args:
@@ -105,17 +70,21 @@ class HsdParser:
         self._opened_tags = []             # info about opened tags
         self._buffer = []                  # buffering plain text between lines
         self._attrib = None                # attribute for current tag
-        self._hsdoptions = OrderedDict()   # hsd-options for current tag
+        self._hsdattrib = {}               # hsd-options for current tag
         self._currline = 0                 # nr. of current line in file
         self._after_equal_sign = False     # last tag was opened with equal sign
         self._inside_attrib = False        # parser inside attrib specification
         self._inside_quote = False         # parser inside quotation
         self._has_child = False
         self._oldbefore = ""               # buffer for tagname
+        self._lower_tag_names = lower_tag_names
 
 
-    def feed(self, fobj):
+    def feed(self, fobj: Union[TextIO, str]):
         """Feeds the parser with data.
+
+        The parser will process the data and trigger the corresponding events
+        in the eventhandler which was passed at initialization.
 
         Args:
             fobj: File like object or name of a file containing the data.
@@ -180,7 +149,7 @@ class HsdParser:
                     self._oldbefore += before
                 else:
                     self._has_child = True
-                    self._hsdoptions[common.HSDATTR_EQUAL] = True
+                    self._hsdattrib[common.HSD_ATTRIB_EQUAL] = True
                     self._starttag(before, False)
                     self._after_equal_sign = True
 
@@ -219,7 +188,6 @@ class HsdParser:
                 self._oldbefore = before
                 self._buffer = []
                 self._inside_attrib = True
-                self._key = ""
                 self._opened_tags.append(("[", self._currline, None))
                 self._checkstr = _ATTRIB_SPECIALS
 
@@ -255,11 +223,10 @@ class HsdParser:
                     self._buffer = []
                     self._eventhandler.add_text(self._include_txt(after[2:]))
                     break
-                elif hsdinc:
+                if hsdinc:
                     self._include_hsd(after[2:])
                     break
-                else:
-                    self._buffer.append(before + sign)
+                self._buffer.append(before + sign)
 
             else:
                 self._error(SYNTAX_ERROR, (self._currline, self._currline))
@@ -285,18 +252,19 @@ class HsdParser:
                 tagname_stripped = self._oldbefore.strip()
         if len(tagname_stripped.split()) > 1:
             self._error(SYNTAX_ERROR, (self._currline, self._currline))
-        self._hsdoptions[common.HSDATTR_LINE] = self._currline
-        self._hsdoptions[common.HSDATTR_TAG] = tagname_stripped
-        tagname_stripped = tagname_stripped.lower()
+        self._hsdattrib[common.HSD_ATTRIB_LINE] = self._currline
+        if self._lower_tag_names:
+            self._hsdattrib[common.HSD_ATTRIB_TAG] = tagname_stripped
+            tagname_stripped = tagname_stripped.lower()
         self._eventhandler.open_tag(tagname_stripped, self._attrib,
-                                    self._hsdoptions)
+                                    self._hsdattrib)
         self._opened_tags.append(
             (tagname_stripped, self._currline, closeprev, self._has_child))
         self._buffer = []
         self._oldbefore = ""
         self._has_child = False
         self._attrib = None
-        self._hsdoptions = OrderedDict()
+        self._hsdattrib = {}
 
 
     def _closetag(self):

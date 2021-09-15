@@ -1,17 +1,15 @@
 #------------------------------------------------------------------------------#
-#  hsd: package for manipulating HSD-formatted data                            #
-#  Copyright (C) 2011 - 2020  DFTB+ developers group                           #
-#                                                                              #
-#  See the LICENSE file for terms of usage and distribution.                   #
+#  hsd-python: package for manipulating HSD-formatted data in Python           #
+#  Copyright (C) 2011 - 2021  DFTB+ developers group                           #
+#  Licensed under the BSD 2-clause license.                                    #
 #------------------------------------------------------------------------------#
 #
 """
 Contains an event-driven builder for dictionary based (JSON-like) structure
 """
 import re
-from .parser import HsdEventHandler
-
-__all__ = ['HsdDictBuilder']
+from .common import ATTRIB_SUFFIX, HSD_ATTRIB_SUFFIX
+from .eventhandler import HsdEventHandler
 
 
 _TOKEN_PATTERN = re.compile(r"""
@@ -27,23 +25,39 @@ _TOKEN_PATTERN = re.compile(r"""
 
 
 class HsdDictBuilder(HsdEventHandler):
-    """Deserializes HSD into nested dictionaries
+    """Specific HSD event handler, which builds a nested Python dictionary.
 
-    Note: hsdoptions passed by the generating events are ignored.
+    Args:
+        flatten_data: Whether multiline data in the HSD input should be
+            flattened into a single list. Othewise a list of lists is created,
+            with one list for every line (default).
+        include_hsd_attribs: Whether the HSD-attributes (processing related
+            attributes, like original tag name, line information, etc.) should
+            be stored.
     """
 
-    def __init__(self, flatten_data=False):
-        HsdEventHandler.__init__(self)
+    def __init__(self, flatten_data: bool = False,
+                 include_hsd_attribs: bool = False):
+        super().__init__()
         self._hsddict = {}
         self._curblock = self._hsddict
         self._parentblocks = []
         self._data = None
         self._flatten_data = flatten_data
+        self._include_hsd_attribs = include_hsd_attribs
 
 
-    def open_tag(self, tagname, attrib, hsdoptions):
+    @property
+    def hsddict(self):
+        """The dictionary which has been built"""
+        return self._hsddict
+
+
+    def open_tag(self, tagname, attrib, hsdattrib):
         if attrib is not None:
-            self._curblock[tagname + '.attribute'] = attrib
+            self._curblock[tagname + ATTRIB_SUFFIX] = attrib
+        if self._include_hsd_attribs and hsdattrib is not None:
+            self._curblock[tagname + HSD_ATTRIB_SUFFIX] = hsdattrib
         self._parentblocks.append(self._curblock)
         self._curblock = {}
 
@@ -68,12 +82,6 @@ class HsdDictBuilder(HsdEventHandler):
 
     def add_text(self, text):
         self._data = self._text_to_data(text)
-
-
-    @property
-    def hsddict(self):
-        """Returns the dictionary which has been built"""
-        return self._hsddict
 
 
     def _text_to_data(self, txt):

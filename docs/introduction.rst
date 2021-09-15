@@ -1,6 +1,6 @@
-**********************************************
-HSD — Make your structured data human friendly
-**********************************************
+************
+Introduction
+************
 
 This package contains utilities to read and write files in the Human-friendly
 Structured Data (HSD) format.
@@ -12,9 +12,6 @@ to YAML). It was developed originally as the input format for the scientific
 simulation tool (`DFTB+ <https://github.com/dftbplus/dftbplus>`_), but is
 of general purpose. Data stored in HSD can be easily mapped to a subset of JSON
 or XML and vica versa.
-
-Detailed `documentation <https://hsd-python.readthedocs.io/>`_ can be found on
-`Read the Docs <https://hsd-python.readthedocs.io/>`_.
 
 
 Installation
@@ -118,9 +115,3 @@ Python ::
 and then stored again in HSD format ::
 
     hsd.dump(hsdinput, "test2.hsd")
-
-
-License
-========
-
-The hsd-python package is licensed under the `BSD 2-clause license <LICENSE>`_.

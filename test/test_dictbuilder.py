@@ -1,13 +1,12 @@
 #!/bin/env python3
 #------------------------------------------------------------------------------#
-#  hsd: package for manipulating HSD-formatted data                            #
-#  Copyright (C) 2011 - 2020  DFTB+ developers group                           #
-#                                                                              #
-#  See the LICENSE file for terms of usage and distribution.                   #
+#  hsd-python: package for manipulating HSD-formatted data in Python           #
+#  Copyright (C) 2011 - 2021  DFTB+ developers group                           #
+#  Licensed under the BSD 2-clause license.                                    #
 #------------------------------------------------------------------------------#
 #
-import hsd
 import os.path as op
+import hsd
 
 def test_dictbuilder():
     dictbuilder = hsd.HsdDictBuilder()
@@ -18,7 +17,7 @@ def test_dictbuilder():
     print("** Python structure without data flattening:\n")
     print(pyrep)
     print("\n** Turning back to HSD:\n")
-    print(hsd.dumps(pyrep))
+    print(hsd.dump_string(pyrep))
 
 
 def test_dictbuilder_flat():
@@ -30,7 +29,7 @@ def test_dictbuilder_flat():
     print("** Python structure with data flattening:\n")
     print(pyrep)
     print("\n** Turning back to HSD:\n")
-    print(hsd.dumps(pyrep))
+    print(hsd.dump_string(pyrep))
 
 
 if __name__ == '__main__':
