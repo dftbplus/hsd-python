@@ -8,7 +8,7 @@
 Contains an event-driven builder for dictionary based (JSON-like) structure
 """
 import re
-from .common import ATTRIB_SUFFIX, HSD_ATTRIB_SUFFIX
+from .common import ATTRIB_SUFFIX, HSD_ATTRIB_SUFFIX, HsdError
 from .eventhandler import HsdEventHandler
 
 
@@ -40,9 +40,9 @@ class HsdDictBuilder(HsdEventHandler):
                  include_hsd_attribs: bool = False):
         super().__init__()
         self._hsddict = {}
-        self._curblock = self._hsddict
+        self._content = self._hsddict  # Content obtained for the current node
         self._parentblocks = []
-        self._data = None
+        self._attribs = []
         self._flatten_data = flatten_data
         self._include_hsd_attribs = include_hsd_attribs
 
@@ -54,34 +54,51 @@ class HsdDictBuilder(HsdEventHandler):
 
 
     def open_tag(self, tagname, attrib, hsdattrib):
-        if attrib is not None:
-            self._curblock[tagname + ATTRIB_SUFFIX] = attrib
-        if self._include_hsd_attribs and hsdattrib is not None:
-            self._curblock[tagname + HSD_ATTRIB_SUFFIX] = hsdattrib
-        self._parentblocks.append(self._curblock)
-        self._curblock = {}
+        self._attribs.append((attrib, hsdattrib))
+        content = {} if self._content is None else self._content
+        self._parentblocks.append(content)
+        self._content = None
 
 
     def close_tag(self, tagname):
+        attrib, hsdattrib = self._attribs.pop(-1)
         parentblock = self._parentblocks.pop(-1)
-        prevcontent = parentblock.get(tagname)
-        if prevcontent is not None and not isinstance(prevcontent, list):
-            prevcontent = [prevcontent]
-            parentblock[tagname] = prevcontent
-        if self._data is None:
-            content = self._curblock
-        else:
-            content = self._data
-            self._data = None
-        if prevcontent is None:
+        prevcont = parentblock.get(tagname)
+        if prevcont is not None:
+            if isinstance(prevcont, dict) and isinstance(self._content, dict):
+                prevcont = [prevcont]
+                parentblock[tagname] = prevcont
+            elif not (isinstance(prevcont, list)
+                      and isinstance(prevcont[0], dict)):
+                msg = f"Invalid duplicate occurance of node '{tagname}'"
+                raise HsdError(msg)
+        content = {} if self._content is None else self._content
+        if prevcont is None:
             parentblock[tagname] = content
+            if attrib:
+                parentblock[tagname + ATTRIB_SUFFIX] = attrib
+            if self._include_hsd_attribs:
+                parentblock[tagname + HSD_ATTRIB_SUFFIX] = hsdattrib
         else:
-            prevcontent.append(content)
-        self._curblock = parentblock
+            prevcont.append(content)
+            prevattrib = parentblock.get(tagname + ATTRIB_SUFFIX)
+            if not (prevattrib is None and attrib is None):
+                msg = f"Duplicate node '{tagname}' should not carry attributes"
+            if self._include_hsd_attribs:
+                prevhsdattrib = parentblock.get(tagname + HSD_ATTRIB_SUFFIX)
+                if isinstance(prevhsdattrib, list):
+                    prevhsdattrib.append(hsdattrib)
+                else:
+                    parentblock[tagname + HSD_ATTRIB_SUFFIX] = [prevhsdattrib,
+                                                                hsdattrib]
+        self._content = parentblock
 
 
     def add_text(self, text):
-        self._data = self._text_to_data(text)
+        if self._content is not None:
+            msg = f"Data appeared in an invalid context"
+            raise HsdError(msg)
+        self._content = self._text_to_data(text)
 
 
     def _text_to_data(self, txt):

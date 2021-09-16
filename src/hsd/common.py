@@ -9,12 +9,8 @@ Implements common functionalities for the HSD package
 """
 
 
-class HsdException(Exception):
+class HsdError(Exception):
     """Base class for exceptions in the HSD package."""
-
-
-class HsdParserError(HsdException):
-    """Base class for parser related errors."""
 
 
 def unquote(txt):

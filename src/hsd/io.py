@@ -223,10 +223,11 @@ def _dump_dict(obj, fobj, indentstr, use_hsd_attribs):
         else:
             attribstr = " [" + attrib + "]"
         if use_hsd_attribs:
-            hsdattribs = obj.get(key + HSD_ATTRIB_SUFFIX)
-            if hsdattribs is not None:
-                key = hsdattribs.get("tag", key)
+            hsdattrib = obj.get(key + HSD_ATTRIB_SUFFIX)
+        else:
+            hsdattrib = None
         if isinstance(value, dict):
+            key = hsdattrib.get("tag", key) if hsdattrib else key
             if value:
                 fobj.write("{}{}{} {{\n".format(indentstr, key, attribstr))
                 _dump_dict(
@@ -235,12 +236,14 @@ def _dump_dict(obj, fobj, indentstr, use_hsd_attribs):
             else:
                 fobj.write("{}{}{} {{}}\n".format(indentstr, key, attribstr))
         elif isinstance(value, list) and value and isinstance(value[0], dict):
-            for item in value:
+            for ind, item in enumerate(value):
+                key = hsdattrib[ind].get("tag", key) if hsdattrib else key
                 fobj.write("{}{}{} {{\n".format(indentstr, key, attribstr))
                 _dump_dict(
                     item, fobj, indentstr + _INDENT_STR, use_hsd_attribs)
                 fobj.write("{}}}\n".format(indentstr))
         else:
+            key = hsdattrib.get("tag", key) if hsdattrib else key
             valstr = _get_hsd_rhs(value, indentstr)
             fobj.write("{}{}{} {}\n"\
                      .format(indentstr, key, attribstr, valstr))
