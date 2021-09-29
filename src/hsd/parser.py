@@ -296,7 +296,7 @@ class HsdParser:
         error_msg = (
             "Parsing error ({}) between lines {} - {} in file '{}'.".format(
                 errorcode, lines[0] + 1, lines[1] + 1, self._fname))
-        raise common.HsdParserError(error_msg)
+        raise common.HsdError(error_msg)
 
 
 

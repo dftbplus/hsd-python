@@ -55,7 +55,7 @@ Analysis {
       Atoms = 1 2 3
       Label = "region1"
     }
-    Region {
+    REgion {
       Atoms = 1 2 3
       Label = "region2"
     }
