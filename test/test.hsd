@@ -22,6 +22,7 @@ Hamiltonian = DFTB {
       1.030000    3.800000    2.820000
     }
   }
+  # Adding arbitrary comment, this should not change parsing result
   Filling = Fermi {
     Temperature [Kelvin] = 1e-08
   }

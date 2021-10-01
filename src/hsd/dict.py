@@ -17,15 +17,23 @@ _ItemType = Union[float, int, bool, str]
 
 _DataType = Union[_ItemType, List[_ItemType]]
 
+# Pattern to transform HSD string values into actual Python data types
 _TOKEN_PATTERN = re.compile(r"""
+# Integer
 (?:\s*(?:^|(?<=\s))(?P<int>[+-]?[0-9]+)(?:\s*$|\s+))
 |
+# Floating point
 (?:\s*(?:^|(?<=\s))
 (?P<float>[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)(?:$|(?=\s+)))
 |
+# Logical (Yes/No)
 (?:\s*(?:^|(?<=\s))(?P<logical>[Yy][Ee][Ss]|[Nn][Oo])(?:$|(?=\s+)))
 |
-(?:\s*(?:(?P<qstr>(?P<quote>['"]).*?(?P=quote)) | (?P<str>.+?))(?:$|\s+))
+# Quoted string
+(?:\s*(?:(?P<qstr>(?P<quote>['"]).*?(?P=quote))
+|
+# Unquoted string
+(?P<str>.+?))(?:$|\s+))
 """, re.VERBOSE | re.MULTILINE)
 
 
