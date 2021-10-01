@@ -11,7 +11,7 @@ as possible (in contrast to XML and JSON) and is not indentation dependent (in
 contrast to YAML). It was developed originally as the input format for the
 scientific simulation tool (`DFTB+ <https://github.com/dftbplus/dftbplus>`_),
 but is of general purpose. Data stored in HSD can be easily mapped to a subset
-of JSON, YAML or XML and vica versa.
+of JSON, YAML or XML and *vice versa*.
 
 
 Installation

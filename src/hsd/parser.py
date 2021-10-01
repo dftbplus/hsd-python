@@ -79,11 +79,11 @@ class HsdParser:
         self._has_child = True             # Whether current node has a child already
         self._has_text = False             # whether current node contains text already
         self._oldbefore = ""               # buffer for tagname
-        self._lower_tag_names = lower_tag_names  # whether tag names should be lowered
+        self._lower_tag_names = lower_tag_names  # whether tag names should be lower cased
 
 
     def parse(self, fobj: Union[TextIO, str]):
-        """Parses the provided file like object.
+        """Parses the provided file-like object.
 
         The parser will process the data and trigger the corresponding events
         in the eventhandler which was passed at initialization.

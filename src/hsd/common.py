@@ -40,7 +40,7 @@ HSD_ATTRIB_NAME = "name"
 # HSD attribute containing the line number
 HSD_ATTRIB_LINE = "line"
 
-# HSD attribute marking that a node equals to its only child (instead of
+# HSD attribute marking that a node is equal to its only child (instead of
 # containing it)
 HSD_ATTRIB_EQUAL = "equal"
 

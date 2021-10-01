@@ -46,7 +46,7 @@ class HsdEventHandler(ABC):
 
 
 class HsdEventPrinter(HsdEventHandler):
-    """Mininal demonstration class for event handlers.
+    """Minimal demonstration class for event handlers.
 
     This specifc implemenation prints the events. Subclassing instances
     should override the public methods to customize its behavior.

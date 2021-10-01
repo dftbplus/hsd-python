@@ -30,8 +30,8 @@ def load(hsdfile: Union[TextIO, str], lower_tag_names: bool = False,
         include_hsd_attribs: Whether the HSD-attributes (processing related
             attributes, like original tag name, line information, etc.) should
             be stored. Use it, if you wish to keep the formatting of the data
-            on writing close to the original one (e.g. lowered tag names
-            converted back to their original form, equal signs between parent
+            close to the original on writing (e.g. lowered tag names
+            converted back to their original form, equals signs between parent
             and only child kept, instead of converted to curly braces).
         flatten_data: Whether multiline data in the HSD input should be
             flattened into a single list. Othewise a list of lists is created,
@@ -70,8 +70,8 @@ def load_string(
         include_hsd_attribs: Whether the HSD-attributes (processing related
             attributes, like original tag name, line information, etc.) should
             be stored. Use it, if you wish to keep the formatting of the data
-            on writing close to the original one (e.g. lowered tag names
-            converted back to their original form, equal signs between parent
+            close to the original one on writing (e.g. lowered tag names
+            converted back to their original form, equals signs between parent
             and only child kept, instead of converted to curly braces).
         flatten_data: Whether multiline data in the HSD input should be
             flattened into a single list. Othewise a list of lists is created,

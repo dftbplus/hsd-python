@@ -5,20 +5,20 @@ The HSD format
 General description
 ===================
 
-You can think about the Human-readable Structured Data format as a pleasent
+You can think about the Human-readable Structured Data format as a pleasant
 representation of a tree structure. It can represent a subset of what you
-can represent for example with XML. The following constraints with respect
+can do for example with XML. The following constraints compared
 to XML apply:
 
-* Every node of a tree, which is not empty, can either contain further nodes
+* Every node of a tree, which is not empty, either contains further nodes
   or data, but never both.
 
 * Every node may have a single (string) attribute only.
 
 These constraints allow a very natural looking formatting of the data.
 
-As an example, let's have a look at a data tree, which represents the input
-for a scientific software. In the XML representation, it could look as ::
+As an example, let's have a look at a data tree, which represents input
+for scientific software. In the XML representation, it could be written as ::
 
   <Hamiltonian>
     <Dftb>
@@ -31,7 +31,7 @@ for a scientific software. In the XML representation, it could look as ::
     </Dftb>
   </Hamiltonian>
 
-The same information can be encoded much more natural and compact in the HSD
+The same information can be encoded in a much more natural and compact form in HSD
 format as ::
 
   Hamiltonian {
@@ -45,21 +45,21 @@ format as ::
     }
   }
 
-The content of a node can be passed either between an opening and a closing
-curly brace or after an equal sign. In the latter case the end of the line will
+The content of a node are passed either between an opening and a closing
+curly brace or after an equals sign. In the latter case the end of the line will
 be the closing delimiter. The attribute (typically the unit of the data
-which a node contains) is specified between square brackets after
+which the node contains) is specified between square brackets after
 the node name.
 
-The equal sign can not only be used to assign data as node content (provided
-the data fits into one line), but also to assign a single child node as content
+The equals sign can be used to assign data as a node content (provided
+the data fits into one line), or to assign a single child node as content
 for a given node. This leads to a compact and expressive notation for those
 cases, where (by the semantics of the input) a given node is only allowed to
 have a single child node as content. The tree above is a piece of a typical
 DFTB+ input, where only one child node is allowed for the nodes ``Hamiltonian``
-and ``Filling``, respectively. (They specify the type of the Hamiltonian
-and the filling function.) By making use of equal signs, the
-simplified HSD representation would look as compact as ::
+and ``Filling``, respectively (They specify the type of the Hamiltonian
+and the filling function). By making use of equals signs, the
+simplified HSD representation can be as compact as ::
 
   Hamiltonian = Dftb {
     Scc = Yes
@@ -76,7 +76,7 @@ Mapping to dictionaries
 
 Being basically a subset of XML, HSD data is best represented as an XML
 DOM-tree. However, very often a dictionary representation is more desirable,
-especially, when the language used to query and manipulate the tree offers
+especially when the language used to query and manipulate the tree offers
 dictionaries as primary data type (e.g. Python). The data in an HSD input
 can be easily represented with the help of nested dictionaries and lists. The
 input from the previous section would have the following representation as
@@ -99,8 +99,8 @@ Python dictionary (or as a JSON formatted input file)::
 The attribute of a node is stored under a special key containting the name of
 the node and the ``.attrib`` suffix.
 
-One slight complication of the dictionary representation arrises in the case,
-when a given node has multiple child nodes with the same name, such as ::
+One slight complication of the dictionary representation arises in the case
+of node which has multiple child nodes with the same name ::
 
   <ExternalField>
     <PointCharges>
@@ -179,12 +179,12 @@ to record following additional data for each HSD node:
 * the line, where the node was defined in the input (helpful for printing out
   informative error messages),
 
-* the name of the HSD node as found in the input (useful if the tag names are
+* the name of the HSD node, as found in the input (useful if the tag names are
   converted to lower case to ease case-insensitive handling of the input) and
 
-* whether an equal sign was used to open the block.
+* whether an equals sign was used to open the block.
 
-If those information are asked to be recored, a special key with the
+If this information is being recorded, a special key with the
 ``.hsdattrib`` suffix will be generated for each node in the dictionary/JSON
 presentation. The correpsonding value will be a dictionary with those
 information.
@@ -227,9 +227,9 @@ will yield the following dictionary representation of the input::
   }
 
 The recorded line numbers can be used to issue helpful error messages with
-information about the line, where the user should search for the problem.
-The node names and the formatting information about the equal sign can ensure,
-that the formatting is similar to the original one, if the data is damped
+information about where the user should search for the problem.
+The node names and formatting information about the equal sign ensures
+that the formatting is similar to the original HSD, if the data is dumped
 into the HSD format again. Dumping the dictionary with ::
 
   hsd.dump(inpdict, "test2-formatted.hsd", use_hsd_attribs=True)
@@ -244,13 +244,13 @@ would indeed yield ::
   }
 
 which is basically identical with the original input. If the additional
-processing information is not recorded when the data is loaded or
+processing information is not recorded when the data is loaded, or
 it is not considered when the data is dumped as HSD again ::
 
   inpdict = hsd.load("test.hsd", lower_tag_names=True)
   hsd.dump(inpdict, "test2-unformatted.hsd")
 
-the resulting formatting will differ from the original form more::
+the resulting formatting will more strongly differ from the original HSD ::
 
   hamiltonian {
     dftb {
