@@ -2,7 +2,7 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  test-new:
+  test:
 
     runs-on: ubuntu-latest
 
@@ -15,10 +15,16 @@ jobs:
         python-version: '3.x'
 
     - name: Install requirements (PIP)
-      run: pip3 install pytest sphinx numpy
+      run: pip3 install pytest sphinx numpy build
 
-    - name: Setup up PYTHONPATH
-      run: echo "PYTHONPATH=${PWD}/src" >> $GITHUB_ENV
+    - name: Setup up root directory
+      run: echo "PACKAGE_ROOT=${PWD}/src" >> $GITHUB_ENV
+
+    - name: Build and install package
+      run: |
+        python -m build
+        pip install dist/hsd_python*.whl
+        python3 -c 'import hsd; print(hsd.__version__)'
 
     - name: Run test pytest
       run: python3 -m pytest
