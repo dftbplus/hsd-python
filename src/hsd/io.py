@@ -8,9 +8,9 @@ Provides functionality to dump Python structures to HSD
 """
 import io
 from typing import Union, TextIO
-from .dict import HsdDictWalker, HsdDictBuilder
-from .formatter import HsdFormatter
-from .parser import HsdParser
+from hsd.dict import HsdDictWalker, HsdDictBuilder
+from hsd.formatter import HsdFormatter
+from hsd.parser import HsdParser
 
 
 _INDENT_STR = "  "
@@ -48,8 +48,8 @@ def load(hsdfile: Union[TextIO, str], lower_tag_names: bool = False,
     parser = HsdParser(eventhandler=dictbuilder,
                        lower_tag_names=lower_tag_names)
     if isinstance(hsdfile, str):
-        with open(hsdfile, "r") as hsdfile:
-            parser.parse(hsdfile)
+        with open(hsdfile, "r") as hsddescr:
+            parser.parse(hsddescr)
     else:
         parser.parse(hsdfile)
     return dictbuilder.hsddict
@@ -92,20 +92,23 @@ def load_string(
         ... }
         ... \"\"\"
         >>> hsd.load_string(hsdstr)
-        {'Dftb': {'Scc': True, 'Filling': {'Fermi': {'Temperature': 100, 'Temperature.attrib': 'Kelvin'}}}}
+        {'Dftb': {'Scc': True, 'Filling': {'Fermi': {'Temperature': 100,
+        'Temperature.attrib': 'Kelvin'}}}}
 
         In order to ease the case-insensitive handling of the input, the tag
         names can be converted to lower case during reading using the
         ``lower_tag_names`` option.
 
         >>> hsd.load_string(hsdstr, lower_tag_names=True)
-        {'dftb': {'scc': True, 'filling': {'fermi': {'temperature': 100, 'temperature.attrib': 'Kelvin'}}}}
+        {'dftb': {'scc': True, 'filling': {'fermi': {'temperature': 100,
+        'temperature.attrib': 'Kelvin'}}}}
 
         The original tag names (together with additional information like the
         line number of a tag) can be recorded, if the ``include_hsd_attribs``
         option is set:
 
-        >>> data = hsd.load_string(hsdstr, lower_tag_names=True, include_hsd_attribs=True)
+        >>> data = hsd.load_string(hsdstr, lower_tag_names=True,
+        ... include_hsd_attribs=True)
 
         Each tag in the dictionary will have a corresponding ".hsdattrib" entry
         with the recorded data:
@@ -117,12 +120,14 @@ def load_string(
         original style, when writing the data in HSD-format again. Compare:
 
         >>> hsd.dump_string(data)
-        'dftb {\\n  scc = Yes\\n  filling {\\n    fermi {\\n      temperature [Kelvin] = 100\\n    }\\n  }\\n}\\n'
+        'dftb {\\n  scc = Yes\\n  filling {\\n    fermi {\\n
+        temperature [Kelvin] = 100\\n    }\\n  }\\n}\\n'
 
         versus
 
         >>> hsd.dump_string(data, use_hsd_attribs=True)
-        'Dftb {\\n  Scc = Yes\\n  Filling {\\n    Fermi {\\n      Temperature [Kelvin] = 100\\n    }\\n  }\\n}\\n'
+        'Dftb {\\n  Scc = Yes\\n  Filling {\\n    Fermi {\\n
+        Temperature [Kelvin] = 100\\n    }\\n  }\\n}\\n'
 
     """
     fobj = io.StringIO(hsdstr)
@@ -155,8 +160,8 @@ def dump(data: dict, hsdfile: Union[TextIO, str],
         msg = "Invalid object type"
         raise TypeError(msg)
     if isinstance(hsdfile, str):
-        with open(hsdfile, "w") as hsdfile:
-            _dump_dict(data, hsdfile, use_hsd_attribs)
+        with open(hsdfile, "w") as hsddescr:
+            _dump_dict(data, hsddescr, use_hsd_attribs)
     else:
         _dump_dict(data, hsdfile, use_hsd_attribs)
 
@@ -186,7 +191,8 @@ def dump_string(data: dict, use_hsd_attribs: bool = False) -> str:
         ...     }
         ... }
         >>> hsd.dump_string(hsdtree)
-        'Dftb {\\n  Scc = Yes\\n  Filling {\\n    Fermi {\\n      Temperature [Kelvin] = 100\\n    }\\n  }\\n}\\n'
+        'Dftb {\\n  Scc = Yes\\n  Filling {\\n    Fermi {\\n
+        Temperature [Kelvin] = 100\\n    }\\n  }\\n}\\n'
 
         See also :func:`hsd.load_string` for an example.
 

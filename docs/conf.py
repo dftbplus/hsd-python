@@ -12,6 +12,8 @@
 #
 import os
 import sys
+import doctest
+
 sys.path.insert(0, os.path.abspath('../src'))
 
 # -- Project information -----------------------------------------------------
@@ -36,6 +38,8 @@ extensions = [
 ]
 
 autodoc_member_order = 'bysource'
+
+doctest_default_flags = doctest.NORMALIZE_WHITESPACE
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

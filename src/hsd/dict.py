@@ -9,9 +9,9 @@ Contains an event-driven builder for dictionary based (JSON-like) structure
 """
 import re
 from typing import List, Tuple, Union
-from .common import np, ATTRIB_SUFFIX, HSD_ATTRIB_SUFFIX, HsdError,\
+from hsd.common import np, ATTRIB_SUFFIX, HSD_ATTRIB_SUFFIX, HsdError,\
     QUOTING_CHARS, SPECIAL_CHARS
-from .eventhandler import HsdEventHandler, HsdEventPrinter
+from hsd.eventhandler import HsdEventHandler, HsdEventPrinter
 
 _ItemType = Union[float, int, bool, str]
 
@@ -106,7 +106,7 @@ class HsdDictBuilder(HsdEventHandler):
 
     def add_text(self, text):
         if self._curblock or self._data is not None:
-            msg = f"Data appeared in an invalid context"
+            msg = "Data appeared in an invalid context"
             raise HsdError(msg)
         self._data = self._text_to_data(text)
 
@@ -215,14 +215,13 @@ def _item_to_hsd(item):
 
     if isinstance(item, bool):
         return "Yes" if item else "No"
-    elif isinstance(item, (int, float)):
+    if isinstance(item, (int, float)):
         return str(item)
-    elif isinstance(item, str):
+    if isinstance(item, str):
         return _str_to_hsd(item)
-    else:
-        msg = "Data type {} can not be converted to HSD string"\
-              .format(type(item))
-        raise TypeError(msg)
+    msg = "Data type {} can not be converted to HSD string"\
+            .format(type(item))
+    raise TypeError(msg)
 
 
 def _str_to_hsd(string):

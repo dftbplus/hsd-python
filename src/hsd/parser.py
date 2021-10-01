@@ -8,8 +8,8 @@
 Contains the event-generating HSD-parser.
 """
 from typing import Optional, TextIO, Union
-import hsd.common as common
-from .eventhandler import HsdEventHandler, HsdEventPrinter
+from hsd import common
+from hsd.eventhandler import HsdEventHandler, HsdEventPrinter
 
 
 SYNTAX_ERROR = 1
@@ -49,7 +49,8 @@ class HsdParser:
         ... \"\"\")
         >>> parser.parse(hsdfile)
         >>> dictbuilder.hsddict
-        {'Hamiltonian': {'Dftb': {'Scc': True, 'Filling': {'Fermi': {'Temperature': 100, 'Temperature.attrib': 'Kelvin'}}}}}
+        {'Hamiltonian': {'Dftb': {'Scc': True, 'Filling': {'Fermi':
+        {'Temperature': 100, 'Temperature.attrib': 'Kelvin'}}}}}
     """
 
     def __init__(self, eventhandler: Optional[HsdEventHandler] = None,
@@ -291,9 +292,8 @@ class HsdParser:
     @staticmethod
     def _include_txt(fname):
         fname = common.unquote(fname.strip())
-        fp = open(fname, "r")
-        txt = fp.read()
-        fp.close()
+        with open(fname, "r") as fp:
+            txt = fp.read()
         return txt
 
 
