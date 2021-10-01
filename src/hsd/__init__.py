@@ -14,3 +14,5 @@ from hsd.eventhandler import HsdEventHandler, HsdEventPrinter
 from hsd.formatter import HsdFormatter
 from hsd.io import load, load_string, dump, dump_string
 from hsd.parser import HsdParser
+
+__version__ = '0.1'
