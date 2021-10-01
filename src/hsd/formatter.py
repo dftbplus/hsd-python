@@ -8,7 +8,7 @@ Provides an event based formatter to create HSD dumps
 """
 
 from typing import List, TextIO, Union
-from hsd.common import HSD_ATTRIB_EQUAL, HSD_ATTRIB_TAG
+from hsd.common import HSD_ATTRIB_EQUAL, HSD_ATTRIB_NAME
 from hsd.eventhandler import HsdEventHandler
 
 
@@ -62,7 +62,7 @@ class HsdFormatter(HsdEventHandler):
             indentstr = self._indent_level * _INDENT_STR
 
         if self._use_hsd_attribs and hsdattrib is not None:
-            tagname = hsdattrib.get(HSD_ATTRIB_TAG, tagname)
+            tagname = hsdattrib.get(HSD_ATTRIB_NAME, tagname)
 
         self._fobj.write(f"{indentstr}{tagname}{attribstr}")
 

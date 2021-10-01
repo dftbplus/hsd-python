@@ -35,7 +35,7 @@ ATTRIB_SUFFIX = ".attrib"
 HSD_ATTRIB_SUFFIX = ".hsdattrib"
 
 # HSD attribute containing the original tag name
-HSD_ATTRIB_TAG = "tag"
+HSD_ATTRIB_NAME = "name"
 
 # HSD attribute containing the line number
 HSD_ATTRIB_LINE = "line"

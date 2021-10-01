@@ -8,10 +8,8 @@ Provides functionality to dump Python structures to HSD
 """
 import io
 from typing import Union, TextIO
-
 from .dict import HsdDictWalker, HsdDictBuilder
 from .formatter import HsdFormatter
-
 from .parser import HsdParser
 
 
@@ -94,14 +92,14 @@ def load_string(
         ... }
         ... \"\"\"
         >>> hsd.load_string(hsdstr)
-        {'Dftb': {'Scc': True, 'Filling': {'Fermi': {'Temperature.attrib': 'Kelvin', 'Temperature': 100}}}}
+        {'Dftb': {'Scc': True, 'Filling': {'Fermi': {'Temperature': 100, 'Temperature.attrib': 'Kelvin'}}}}
 
         In order to ease the case-insensitive handling of the input, the tag
         names can be converted to lower case during reading using the
         ``lower_tag_names`` option.
 
         >>> hsd.load_string(hsdstr, lower_tag_names=True)
-        {'dftb': {'scc': True, 'filling': {'fermi': {'temperature.attrib': 'Kelvin', 'temperature': 100}}}}
+        {'dftb': {'scc': True, 'filling': {'fermi': {'temperature': 100, 'temperature.attrib': 'Kelvin'}}}}
 
         The original tag names (together with additional information like the
         line number of a tag) can be recorded, if the ``include_hsd_attribs``
@@ -113,7 +111,7 @@ def load_string(
         with the recorded data:
 
         >>> data["dftb.hsdattrib"]
-        {'line': 1, 'tag': 'Dftb'}
+        {'line': 1, 'name': 'Dftb'}
 
         This additional data can be then also used to format the tags in the
         original style, when writing the data in HSD-format again. Compare:

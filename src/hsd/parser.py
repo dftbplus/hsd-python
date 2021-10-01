@@ -49,7 +49,7 @@ class HsdParser:
         ... \"\"\")
         >>> parser.parse(hsdfile)
         >>> dictbuilder.hsddict
-        {'Hamiltonian': {'Dftb': {'Scc': True, 'Filling': {'Fermi': {'Temperature.attrib': 'Kelvin', 'Temperature': 100}}}}}
+        {'Hamiltonian': {'Dftb': {'Scc': True, 'Filling': {'Fermi': {'Temperature': 100, 'Temperature.attrib': 'Kelvin'}}}}}
     """
 
     def __init__(self, eventhandler: Optional[HsdEventHandler] = None,
@@ -75,9 +75,10 @@ class HsdParser:
         self._after_equal_sign = False     # last tag was opened with equal sign
         self._inside_attrib = False        # parser inside attrib specification
         self._inside_quote = False         # parser inside quotation
-        self._has_child = False
+        self._has_child = True             # Whether current node has a child already
+        self._has_text = False             # whether current node contains text already
         self._oldbefore = ""               # buffer for tagname
-        self._lower_tag_names = lower_tag_names
+        self._lower_tag_names = lower_tag_names  # whether tag names should be lowered
 
 
     def parse(self, fobj: Union[TextIO, str]):
@@ -148,14 +149,13 @@ class HsdParser:
                     # tagname was followed by an attribute -> append
                     self._oldbefore += before
                 else:
-                    self._has_child = True
                     self._hsdattrib[common.HSD_ATTRIB_EQUAL] = True
                     self._starttag(before, False)
                     self._after_equal_sign = True
 
             # Opening tag by curly brace
             elif sign == "{":
-                self._has_child = True
+                #self._has_child = True
                 self._starttag(before, self._after_equal_sign)
                 self._buffer = []
                 self._after_equal_sign = False
@@ -188,7 +188,7 @@ class HsdParser:
                 self._oldbefore = before
                 self._buffer = []
                 self._inside_attrib = True
-                self._opened_tags.append(("[", self._currline, None))
+                self._opened_tags.append(("[", self._currline, None, None, None))
                 self._checkstr = _ATTRIB_SPECIALS
 
             # Closing attribute specification
@@ -212,7 +212,7 @@ class HsdParser:
                     self._checkstr = sign
                     self._inside_quote = True
                     self._buffer.append(before + sign)
-                    self._opened_tags.append(('"', self._currline, None))
+                    self._opened_tags.append(('"', self._currline, None, None, None))
 
             # Interrupt
             elif sign == "<" and not self._after_equal_sign:
@@ -237,13 +237,18 @@ class HsdParser:
     def _text(self, text):
         stripped = text.strip()
         if stripped:
+            if self._has_child:
+                self._error(SYNTAX_ERROR, (self._currline, self._currline))
             self._eventhandler.add_text(stripped)
+            self._has_text = True
 
 
     def _starttag(self, tagname, closeprev):
         txt = "".join(self._buffer)
         if txt:
             self._text(txt)
+        if self._has_text:
+            self._error(SYNTAX_ERROR, (self._currline, self._currline))
         tagname_stripped = tagname.strip()
         if self._oldbefore:
             if tagname_stripped:
@@ -254,15 +259,15 @@ class HsdParser:
             self._error(SYNTAX_ERROR, (self._currline, self._currline))
         self._hsdattrib[common.HSD_ATTRIB_LINE] = self._currline
         if self._lower_tag_names:
-            self._hsdattrib[common.HSD_ATTRIB_TAG] = tagname_stripped
+            self._hsdattrib[common.HSD_ATTRIB_NAME] = tagname_stripped
             tagname_stripped = tagname_stripped.lower()
         self._eventhandler.open_tag(tagname_stripped, self._attrib,
                                     self._hsdattrib)
         self._opened_tags.append(
-            (tagname_stripped, self._currline, closeprev, self._has_child))
+            (tagname_stripped, self._currline, closeprev, True, False))
+        self._has_child = False
         self._buffer = []
         self._oldbefore = ""
-        self._has_child = False
         self._attrib = None
         self._hsdattrib = {}
 
@@ -271,7 +276,7 @@ class HsdParser:
         if not self._opened_tags:
             self._error(SYNTAX_ERROR, (0, self._currline))
         self._buffer = []
-        tag, _, closeprev, self._has_child = self._opened_tags.pop()
+        tag, _, closeprev, self._has_child, self._has_text = self._opened_tags.pop()
         self._eventhandler.close_tag(tag)
         if closeprev:
             self._closetag()
