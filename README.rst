@@ -2,8 +2,8 @@
 HSD — Make your structured data human friendly
 **********************************************
 
-This package contains utilities to read and write files in the Human-friendly
-Structured Data (HSD) format.
+Utilities to read and write files in the Human-friendly Structured Data (HSD)
+format.
 
 The HSD-format is very similar to both JSON and YAML, but tries to minimize the
 effort for **humans** to read and write it. It ommits special characters as much
@@ -22,7 +22,7 @@ Installation
 
 The package can be installed via conda-forge::
 
-  conda install hsd-python
+  conda install --channel "conda-forge" hsd-python
 
 Alternatively, the package can be downloaded and installed via pip into the
 active Python interpreter (preferably using a virtual python environment) by ::
