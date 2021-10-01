@@ -23,6 +23,9 @@ FILES_PATTERNS = [('src/hsd/__init__.py',
                   ('docs/conf.py',
                    r'release\s*=\s*([\'"]){}\1'.format(VERSION_PATTERN),
                    "release = '{version}'"),
+                  ('.github/workflows/ci.yml',
+                   r'HSD_PYTHON_VERSION:\s*([\'"]){}\1'.format(VERSION_PATTERN),
+                   "HSD_PYTHON_VERSION: '{version}'"),
                  ]
 
 

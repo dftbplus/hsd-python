@@ -1,6 +1,9 @@
 name: CI
 on: [push, pull_request]
 
+env:
+  HSD_PYTHON_VERSION: '0.1'
+
 jobs:
   test:
 
@@ -24,7 +27,7 @@ jobs:
       run: |
         python -m build
         pip install dist/hsd_python*.whl
-        python3 -c 'import hsd; print(hsd.__version__)'
+        python -c "import hsd; assert hsd.__version__ == '${HSD_PYTHON_VERSION}'"
 
     - name: Run test pytest
       run: python3 -m pytest
