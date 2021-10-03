@@ -43,10 +43,9 @@ def load(hsdfile: Union[TextIO, str], lower_tag_names: bool = False,
     Examples:
         See :func:`hsd.load_string` for examples of usage.
     """
-    dictbuilder = HsdDictBuilder(flatten_data=flatten_data,
+    dictbuilder = HsdDictBuilder(lower_tag_names=lower_tag_names, flatten_data=flatten_data,
                                  include_hsd_attribs=include_hsd_attribs)
-    parser = HsdParser(eventhandler=dictbuilder,
-                       lower_tag_names=lower_tag_names)
+    parser = HsdParser(eventhandler=dictbuilder)
     if isinstance(hsdfile, str):
         with open(hsdfile, "r") as hsddescr:
             parser.parse(hsddescr)

@@ -137,7 +137,7 @@ _TESTS_HSDATTRIB_LOWER_NAMES, _TESTS_HSDATTRIB_LOWER_CASES = zip(*_TESTS_HSDATTR
     _TESTS_NO_HSDATTRIB_CASES,
     ids=_TESTS_NO_HSDATTRIB_NAMES
 )
-def test_builder_nohsdattr(hsdstr, hsddict):
+def test_dict_builder_nohsdattr(hsdstr, hsddict):
     """Test transformation from hsd to dictionary without HSD attributes."""
     dictbuilder = hsd.HsdDictBuilder(include_hsd_attribs=False)
     parser = hsd.HsdParser(eventhandler=dictbuilder)
@@ -151,7 +151,7 @@ def test_builder_nohsdattr(hsdstr, hsddict):
     _TESTS_HSDATTRIB_CASES,
     ids=_TESTS_HSDATTRIB_NAMES
 )
-def test_builder_hsdattr(hsdstr, hsddict):
+def test_dict_builder_hsdattr(hsdstr, hsddict):
     """Test transformation from hsd to dictionary with HSD attributes."""
     dictbuilder = hsd.HsdDictBuilder(include_hsd_attribs=True)
     parser = hsd.HsdParser(eventhandler=dictbuilder)
@@ -165,10 +165,10 @@ def test_builder_hsdattr(hsdstr, hsddict):
     _TESTS_HSDATTRIB_LOWER_CASES,
     ids=_TESTS_HSDATTRIB_LOWER_NAMES
 )
-def test_builder_hsdattr_lower(hsdstr, hsddict):
+def test_dict_builder_hsdattr_lower(hsdstr, hsddict):
     """Test transformation from hsd to dictionary with HSD attributes and case lowering."""
-    dictbuilder = hsd.HsdDictBuilder(include_hsd_attribs=True)
-    parser = hsd.HsdParser(eventhandler=dictbuilder, lower_tag_names=True)
+    dictbuilder = hsd.HsdDictBuilder(include_hsd_attribs=True, lower_tag_names=True)
+    parser = hsd.HsdParser(eventhandler=dictbuilder)
     fobj = io.StringIO(hsdstr)
     parser.parse(fobj)
     assert dictbuilder.hsddict == hsddict
@@ -179,7 +179,7 @@ def test_builder_hsdattr_lower(hsdstr, hsddict):
     _TESTS_HSDATTRIB_CASES,
     ids=_TESTS_HSDATTRIB_NAMES
 )
-def test_walker_hsdattr(hsdstr, hsddict):
+def test_dict_walker_hsdattr(hsdstr, hsddict):
     """Test transformation from dictionary to string using HSD attributes."""
     output = io.StringIO()
     formatter = hsd.HsdFormatter(output, use_hsd_attribs=True)
@@ -193,7 +193,7 @@ def test_walker_hsdattr(hsdstr, hsddict):
     _TESTS_HSDATTRIB_LOWER_CASES,
     ids=_TESTS_HSDATTRIB_LOWER_NAMES
 )
-def test_walker_hsdattr_lower(hsdstr, hsddict):
+def test_dict_walker_hsdattr_lower(hsdstr, hsddict):
     """Test transformation from dictionary to string using HSD attributes."""
     output = io.StringIO()
     formatter = hsd.HsdFormatter(output, use_hsd_attribs=True)

@@ -9,7 +9,7 @@ Contains an event-driven builder for dictionary based (JSON-like) structure
 """
 import re
 from typing import List, Tuple, Union
-from hsd.common import np, ATTRIB_SUFFIX, HSD_ATTRIB_SUFFIX, HsdError,\
+from hsd.common import HSD_ATTRIB_NAME, np, ATTRIB_SUFFIX, HSD_ATTRIB_SUFFIX, HsdError,\
     QUOTING_CHARS, SPECIAL_CHARS
 from hsd.eventhandler import HsdEventHandler, HsdEventPrinter
 
@@ -42,14 +42,16 @@ class HsdDictBuilder(HsdEventHandler):
 
     Args:
         flatten_data: Whether multiline data in the HSD input should be
-            flattened into a single list. Othewise a list of lists is created,
-            with one list for every line (default).
-        include_hsd_attribs: Whether the HSD-attributes (processing related
-            attributes, like original tag name, line information, etc.) should
-            be stored.
+            flattened into a single list. Othewise a list of lists is created, with one list for
+            every line (default).
+        lower_tag_names: Whether tag names should be all converted to lower case (to ease case
+            insensitive processing). Default: False. If set and include_hsd_attribs is also set,
+            the original tag names can be retrieved from the "name" hsd attributes.
+        include_hsd_attribs: Whether the HSD-attributes (processing related attributes, like
+            original tag name, line information, etc.) should be stored (default: False).
     """
 
-    def __init__(self, flatten_data: bool = False,
+    def __init__(self, flatten_data: bool = False, lower_tag_names: bool = False,
                  include_hsd_attribs: bool = False):
         super().__init__()
         self._hsddict: dict = {}
@@ -58,6 +60,7 @@ class HsdDictBuilder(HsdEventHandler):
         self._data: Union[None, _DataType] = None
         self._attribs: List[Tuple[str, dict]] = []
         self._flatten_data: bool = flatten_data
+        self._lower_tag_names: bool = lower_tag_names
         self._include_hsd_attribs: bool = include_hsd_attribs
 
 
@@ -79,46 +82,49 @@ class HsdDictBuilder(HsdEventHandler):
     def close_tag(self, tagname):
         attrib, hsdattrib = self._attribs.pop(-1)
         parentblock = self._parentblocks.pop(-1)
+        key = tagname.lower() if self._lower_tag_names else tagname
         prevcont = parentblock.get(tagname)
+
         if self._data is not None:
             if prevcont is None:
-                parentblock[tagname] = self._data
+                parentblock[key] = self._data
             elif isinstance(prevcont, list) and len(prevcont) > 0 and isinstance(prevcont[0], dict):
                 prevcont.append({None: self._data})
             elif isinstance(prevcont, dict):
-                parentblock[tagname] = [prevcont, {None: self._data}]
+                parentblock[key] = [prevcont, {None: self._data}]
             else:
-                parentblock[tagname] = [{None: prevcont}, {None: self._data}]
+                parentblock[key] = [{None: prevcont}, {None: self._data}]
         else:
             if prevcont is None:
-                parentblock[tagname] = self._curblock
+                parentblock[key] = self._curblock
             elif isinstance(prevcont, list) and len(prevcont) > 0 and isinstance(prevcont[0], dict):
                 prevcont.append(self._curblock)
             elif isinstance(prevcont, dict):
-                parentblock[tagname] = [prevcont, self._curblock]
+                parentblock[key] = [prevcont, self._curblock]
             else:
-                parentblock[tagname] = [{None: prevcont}, self._curblock]
+                parentblock[key] = [{None: prevcont}, self._curblock]
 
-        if prevcont is None:
-            if attrib:
-                parentblock[tagname + ATTRIB_SUFFIX] = attrib
-            if self._include_hsd_attribs:
-                parentblock[tagname + HSD_ATTRIB_SUFFIX] = hsdattrib
-        else:
-            prevattrib = parentblock.get(tagname + ATTRIB_SUFFIX)
+        if attrib and prevcont is None:
+            parentblock[key + ATTRIB_SUFFIX] = attrib
+        elif prevcont is not None:
+            prevattrib = parentblock.get(key + ATTRIB_SUFFIX)
             if isinstance(prevattrib, list):
                 prevattrib.append(attrib)
             else:
-                parentblock[tagname + ATTRIB_SUFFIX] = [prevattrib, attrib]
-                print(f"parentblock[{tagname} + {ATTRIB_SUFFIX}] = [{prevattrib}, {attrib}]")
+                parentblock[key + ATTRIB_SUFFIX] = [prevattrib, attrib]
 
-            if self._include_hsd_attribs:
-                prevhsdattrib = parentblock.get(tagname + HSD_ATTRIB_SUFFIX)
+        if self._include_hsd_attribs:
+            if self._lower_tag_names:
+                hsdattrib = {} if hsdattrib is None else hsdattrib
+                hsdattrib[HSD_ATTRIB_NAME] = tagname
+            if prevcont is None:
+                parentblock[key + HSD_ATTRIB_SUFFIX] = hsdattrib
+            else:
+                prevhsdattrib = parentblock.get(key + HSD_ATTRIB_SUFFIX)
                 if isinstance(prevhsdattrib, list):
                     prevhsdattrib.append(hsdattrib)
                 else:
-                    parentblock[tagname + HSD_ATTRIB_SUFFIX] = [prevhsdattrib,
-                                                                hsdattrib]
+                    parentblock[key + HSD_ATTRIB_SUFFIX] = [prevhsdattrib, hsdattrib]
         self._curblock = parentblock
         self._data = None
 

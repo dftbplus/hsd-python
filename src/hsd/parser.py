@@ -29,9 +29,6 @@ class HsdParser:
     Arguments:
         eventhandler: Object which should handle the HSD-events triggered
             during parsing. When not specified, HsdEventPrinter() is used.
-        lower_tag_names: Whether tag names should be lowered during parsing.
-            If the option is set, the original tag name will be stored among
-            the hsd attributes.
 
     Examples:
         >>> from io import StringIO
@@ -53,8 +50,7 @@ class HsdParser:
         {'Temperature': 100, 'Temperature.attrib': 'Kelvin'}}}}}
     """
 
-    def __init__(self, eventhandler: Optional[HsdEventHandler] = None,
-        lower_tag_names: bool = False):
+    def __init__(self, eventhandler: Optional[HsdEventHandler] = None):
         """Initializes the parser.
 
         Args:
@@ -79,7 +75,6 @@ class HsdParser:
         self._has_child = True             # Whether current node has a child already
         self._has_text = False             # whether current node contains text already
         self._oldbefore = ""               # buffer for tagname
-        self._lower_tag_names = lower_tag_names  # whether tag names should be lower cased
 
 
     def parse(self, fobj: Union[TextIO, str]):
@@ -258,9 +253,6 @@ class HsdParser:
         if len(tagname_stripped.split()) > 1:
             self._error(SYNTAX_ERROR, (self._currline, self._currline))
         self._hsdattrib[common.HSD_ATTRIB_LINE] = self._currline
-        if self._lower_tag_names:
-            self._hsdattrib[common.HSD_ATTRIB_NAME] = tagname_stripped
-            tagname_stripped = tagname_stripped.lower()
         self._eventhandler.open_tag(tagname_stripped, self._attrib,
                                     self._hsdattrib)
         self._opened_tags.append(

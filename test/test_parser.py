@@ -50,6 +50,19 @@ _VALID_TESTS = [
             ]
         )
     ),
+    (
+        "Variable", (
+            """$Variable = 12\nValue = $Variable\n""",
+            [
+                (_OPEN_TAG_EVENT, "$Variable", None, {_HSD_LINE: 0, _HSD_EQUAL: True}),
+                (_ADD_TEXT_EVENT, "12"),
+                (_CLOSE_TAG_EVENT, "$Variable"),
+                (_OPEN_TAG_EVENT, "Value", None, {_HSD_LINE: 1, _HSD_EQUAL: True}),
+                (_ADD_TEXT_EVENT, "$Variable"),
+                (_CLOSE_TAG_EVENT, "Value")
+            ]
+        )
+    ),
 ]
 
 _VALID_TEST_NAMES, _VALID_TEST_CASES = zip(*_VALID_TESTS)
@@ -87,8 +100,8 @@ class _TestEventHandler(hsd.HsdEventHandler):
     def __init__(self):
         self.events = []
 
-    def open_tag(self, tagname, attrib, hsdoptions):
-        self.events.append((_OPEN_TAG_EVENT, tagname, attrib, hsdoptions))
+    def open_tag(self, tagname, attrib, hsdattrib):
+        self.events.append((_OPEN_TAG_EVENT, tagname, attrib, hsdattrib))
 
     def close_tag(self, tagname):
         self.events.append((_CLOSE_TAG_EVENT, tagname))
@@ -102,7 +115,8 @@ class _TestEventHandler(hsd.HsdEventHandler):
     _VALID_TEST_CASES,
     ids=_VALID_TEST_NAMES
 )
-def test_valid_parser_events(hsd_input, expected_events):
+def test_parser_events(hsd_input, expected_events):
+    """Test valid parser events"""
     testhandler = _TestEventHandler()
     parser = hsd.HsdParser(eventhandler=testhandler)
     hsdfile = io.StringIO(hsd_input)
@@ -115,7 +129,8 @@ def test_valid_parser_events(hsd_input, expected_events):
     _FAILING_TEST_CASES,
     ids=_FAILING_TEST_NAMES
 )
-def test_invalid_parser_events(hsd_input):
+def test_parser_exceptions(hsd_input):
+    """Test exception raised by the parser"""
     testhandler = _TestEventHandler()
     parser = hsd.HsdParser(eventhandler=testhandler)
     hsdfile = io.StringIO(hsd_input)
