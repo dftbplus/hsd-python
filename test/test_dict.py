@@ -1,9 +1,9 @@
 #!/bin/env python3
-#------------------------------------------------------------------------------#
-#  hsd-python: package for manipulating HSD-formatted data in Python           #
-#  Copyright (C) 2011 - 2021  DFTB+ developers group                           #
-#  Licensed under the BSD 2-clause license.                                    #
-#------------------------------------------------------------------------------#
+#--------------------------------------------------------------------------------------------------#
+#  hsd-python: package for manipulating HSD-formatted data in Python                               #
+#  Copyright (C) 2011 - 2021  DFTB+ developers group                                               #
+#  Licensed under the BSD 2-clause license.                                                        #
+#--------------------------------------------------------------------------------------------------#
 #
 """Tests for the dictbuilder class"""
 
@@ -11,9 +11,11 @@ import io
 import pytest
 import hsd
 
+# Some abbreviations
 _HSD_LINE = hsd.HSD_ATTRIB_LINE
 _HSD_EQUAL = hsd.HSD_ATTRIB_EQUAL
 _HSD_NAME = hsd.HSD_ATTRIB_NAME
+
 
 # General test list format for valid tests
 # [("Test name", ([List of HSD events], expected dictionary outcome))]

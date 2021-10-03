@@ -1,8 +1,8 @@
-#------------------------------------------------------------------------------#
-#  hsd-python: package for manipulating HSD-formatted data in Python           #
-#  Copyright (C) 2011 - 2021  DFTB+ developers group                           #
-#  Licensed under the BSD 2-clause license.                                    #
-#------------------------------------------------------------------------------#
+#--------------------------------------------------------------------------------------------------#
+#  hsd-python: package for manipulating HSD-formatted data in Python                               #
+#  Copyright (C) 2011 - 2021  DFTB+ developers group                                               #
+#  Licensed under the BSD 2-clause license.                                                        #
+#--------------------------------------------------------------------------------------------------#
 #
 """
 Contains the event-generating HSD-parser.
@@ -145,9 +145,7 @@ class HsdParser:
             # Equal sign
             elif sign == "=":
                 # Ignore if followed by "{" (DFTB+ compatibility)
-                if after.lstrip().startswith("{"):
-                    # _oldbefore may already contain the tagname, if the
-                    # tagname was followed by an attribute -> append
+                if after.lstrip().startswith("{"):                    # _oldbefore may already contain the tagname, if the                    # tagname was followed by an attribute -> append
                     self._oldbefore += before
                 else:
                     self._hsdattrib[common.HSD_ATTRIB_EQUAL] = True
