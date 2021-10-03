@@ -22,7 +22,7 @@ _VALID_TESTS = [
         "Simple", (
             """Test {} """,
             [
-                (_OPEN_TAG_EVENT, "Test", None, {_HSD_LINE: 0}),
+                (_OPEN_TAG_EVENT, "Test", None, {_HSD_LINE: 0, _HSD_EQUAL: False}),
                 (_CLOSE_TAG_EVENT, "Test"),
             ]
         )
@@ -32,7 +32,7 @@ _VALID_TESTS = [
             """O = SelectedShells { "s" "p" }""",
             [
                 (_OPEN_TAG_EVENT, "O", None, {_HSD_LINE: 0, _HSD_EQUAL: True}),
-                (_OPEN_TAG_EVENT, 'SelectedShells', None, {_HSD_LINE: 0}),
+                (_OPEN_TAG_EVENT, 'SelectedShells', None, {_HSD_LINE: 0, _HSD_EQUAL: False}),
                 (_ADD_TEXT_EVENT, '"s" "p"'),
                 (_CLOSE_TAG_EVENT, 'SelectedShells'),
                 (_CLOSE_TAG_EVENT, 'O'),
@@ -43,7 +43,8 @@ _VALID_TESTS = [
         "Attribute containing comma", (
             """PolarRadiusCharge [AA^3,AA,] = {\n1.030000  3.800000  2.820000\n}""",
             [
-                (_OPEN_TAG_EVENT, "PolarRadiusCharge", "AA^3,AA,", {_HSD_LINE: 0, }),
+                (_OPEN_TAG_EVENT, "PolarRadiusCharge", "AA^3,AA,",
+                 {_HSD_LINE: 0, _HSD_EQUAL: False}),
                 (_ADD_TEXT_EVENT, '1.030000  3.800000  2.820000'),
                 (_CLOSE_TAG_EVENT, 'PolarRadiusCharge'),
             ]

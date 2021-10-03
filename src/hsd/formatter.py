@@ -97,7 +97,7 @@ class HsdFormatter(HsdEventHandler):
         equal = self._followed_by_equal[-1]
         multiline = "\n" in text
         if equal is None and not multiline:
-            if len(self._followed_by_equal) > 2:
+            if len(self._followed_by_equal) > 1:
                 equal = not self._followed_by_equal[-2]
             else:
                 equal = True

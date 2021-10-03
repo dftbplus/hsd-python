@@ -157,6 +157,7 @@ class HsdParser:
             # Opening tag by curly brace
             elif sign == "{":
                 #self._has_child = True
+                self._hsdattrib[common.HSD_ATTRIB_EQUAL] = False
                 self._starttag(before, self._after_equal_sign)
                 self._buffer = []
                 self._after_equal_sign = False

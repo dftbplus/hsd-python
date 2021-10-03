@@ -114,7 +114,7 @@ def load_string(
         with the recorded data:
 
         >>> data["dftb.hsdattrib"]
-        {'line': 1, 'name': 'Dftb'}
+        {'equal': False, 'line': 1, 'name': 'Dftb'}
 
         This additional data can be then also used to format the tags in the
         original style, when writing the data in HSD-format again. Compare:

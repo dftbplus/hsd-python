@@ -80,27 +80,38 @@ class HsdDictBuilder(HsdEventHandler):
         attrib, hsdattrib = self._attribs.pop(-1)
         parentblock = self._parentblocks.pop(-1)
         prevcont = parentblock.get(tagname)
-        if prevcont is not None:
-            if isinstance(prevcont, dict) and self._data is None:
-                prevcont = [prevcont]
-                parentblock[tagname] = prevcont
-            elif not (isinstance(prevcont, list)
-                      and isinstance(prevcont[0], dict)):
-                msg = f"Invalid duplicate occurance of node '{tagname}'"
-                raise HsdError(msg)
+        if self._data is not None:
+            if prevcont is None:
+                parentblock[tagname] = self._data
+            elif isinstance(prevcont, list) and len(prevcont) > 0 and isinstance(prevcont[0], dict):
+                prevcont.append({None: self._data})
+            elif isinstance(prevcont, dict):
+                parentblock[tagname] = [prevcont, {None: self._data}]
+            else:
+                parentblock[tagname] = [{None: prevcont}, {None: self._data}]
+        else:
+            if prevcont is None:
+                parentblock[tagname] = self._curblock
+            elif isinstance(prevcont, list) and len(prevcont) > 0 and isinstance(prevcont[0], dict):
+                prevcont.append(self._curblock)
+            elif isinstance(prevcont, dict):
+                parentblock[tagname] = [prevcont, self._curblock]
+            else:
+                parentblock[tagname] = [{None: prevcont}, self._curblock]
 
         if prevcont is None:
-            content = self._data if self._data is not None else self._curblock
-            parentblock[tagname] = content
             if attrib:
                 parentblock[tagname + ATTRIB_SUFFIX] = attrib
             if self._include_hsd_attribs:
                 parentblock[tagname + HSD_ATTRIB_SUFFIX] = hsdattrib
         else:
-            prevcont.append(self._curblock)
             prevattrib = parentblock.get(tagname + ATTRIB_SUFFIX)
-            if not (prevattrib is None and attrib is None):
-                msg = f"Duplicate node '{tagname}' should not carry attributes"
+            if isinstance(prevattrib, list):
+                prevattrib.append(attrib)
+            else:
+                parentblock[tagname + ATTRIB_SUFFIX] = [prevattrib, attrib]
+                print(f"parentblock[{tagname} + {ATTRIB_SUFFIX}] = [{prevattrib}, {attrib}]")
+
             if self._include_hsd_attribs:
                 prevhsdattrib = parentblock.get(tagname + HSD_ATTRIB_SUFFIX)
                 if isinstance(prevhsdattrib, list):
@@ -189,8 +200,12 @@ class HsdDictWalker:
             elif isinstance(value, list) and value and isinstance(value[0], dict):
                 for ind, item in enumerate(value):
                     hsdattr = hsdattrib[ind] if hsdattrib else None
-                    self._eventhandler.open_tag(key, None, hsdattr)
-                    self.walk(item)
+                    attr = attrib[ind] if attrib else None
+                    self._eventhandler.open_tag(key, attr, hsdattr)
+                    if None in item:
+                        self._eventhandler.add_text(_to_text(item[None]))
+                    else:
+                        self.walk(item)
                     self._eventhandler.close_tag(key)
 
             else:
