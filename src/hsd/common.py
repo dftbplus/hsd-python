@@ -7,6 +7,11 @@
 """
 Implements common functionalities for the HSD package
 """
+try:
+    import numpy as np
+except ModuleNotFoundError:
+    np = None
+
 
 
 class HsdError(Exception):
@@ -26,18 +31,21 @@ DEFAULT_ATTRIBUTE = "unit"
 # Suffix to mark attribute
 ATTRIB_SUFFIX = ".attrib"
 
-# Length of the attribute suffix
-LEN_ATTRIB_SUFFIX = len(ATTRIB_SUFFIX)
-
 # Suffix to mark hsd processing attributes
 HSD_ATTRIB_SUFFIX = ".hsdattrib"
 
-# Lengths of hsd processing attribute suffix
-LEN_HSD_ATTRIB_SUFFIX = len(HSD_ATTRIB_SUFFIX)
+# HSD attribute containing the original tag name
+HSD_ATTRIB_NAME = "name"
 
-
+# HSD attribute containing the line number
 HSD_ATTRIB_LINE = "line"
 
+# HSD attribute marking that a node is equal to its only child (instead of
+# containing it)
 HSD_ATTRIB_EQUAL = "equal"
 
-HSD_ATTRIB_TAG = "tag"
+# String quoting delimiters (must be at least two)
+QUOTING_CHARS = "\"'"
+
+# Special characters
+SPECIAL_CHARS = "{}[]= "

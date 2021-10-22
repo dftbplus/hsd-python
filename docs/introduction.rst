@@ -5,13 +5,13 @@ Introduction
 This package contains utilities to read and write files in the Human-friendly
 Structured Data (HSD) format.
 
-The HSD-format is very similar to both JSON and YAML, but tries to minimize the
+The HSD-format is very similar to XML, JSON and YAML, but tries to minimize the
 effort for **humans** to read and write it. It ommits special characters as much
-as possible (in contrast to JSON) and is not indentation dependent (in contrast
-to YAML). It was developed originally as the input format for the scientific
-simulation tool (`DFTB+ <https://github.com/dftbplus/dftbplus>`_), but is
-of general purpose. Data stored in HSD can be easily mapped to a subset of JSON
-or XML and vica versa.
+as possible (in contrast to XML and JSON) and is not indentation dependent (in
+contrast to YAML). It was developed originally as the input format for the
+scientific simulation tool (`DFTB+ <https://github.com/dftbplus/dftbplus>`_),
+but is of general purpose. Data stored in HSD can be easily mapped to a subset
+of JSON, YAML or XML and *vice versa*.
 
 
 Installation

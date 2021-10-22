@@ -11,4 +11,5 @@ HSD-python documentation
    :maxdepth: 2
 
    introduction
+   hsd
    api

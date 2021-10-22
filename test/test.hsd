@@ -8,46 +8,41 @@ Geometry {
   }
 }
 Driver {}
-Hamiltonian {
-  DFTB {
-    Scc = Yes
-    SccTolerance = 1e-10
-    MaxSccIterations = 1000
-    Mixer {
-      Broyden {}
-    }
-    MaxAngularMomentum {
-      H = SelectedShells {"s" "s" }
-      O = SelectedShells {"s" "p" }
-    }
-    Dispersion = SlaterKirkwood {
-      PolarRadiusCharge [AA^3,AA,] = {
-        1.030000    3.800000    2.820000
-      }
-    }
-    Filling {
-      Fermi {
-        Temperature [Kelvin] = 1e-08
-      }
-    }
-    KPointsAndWeights {
-      SupercellFolding = {
-        2 0 0
-        0 2 0
-        0 0 2
-        0.5 0.5 0.5
-      }
-    }
-    ElectricField {
-      PointCharges {
-        CoordsAndCharges = {
-          -0.94 -9.44 1.2 1.0
-          -0.94 -9.44 1.2 -1.0
-        }
-      }
-    }
-    SelectSomeAtoms = 1 2  " 3 : -3 "
+Hamiltonian = DFTB {
+  Scc = Yes
+  SccTolerance = 1e-10
+  MaxSccIterations = 1000
+  Mixer = Broyden {}
+  MaxAngularMomentum {
+    H = SelectedShells {"s" "s" }
+    O = SelectedShells {"s" "p" }
   }
+  Dispersion = SlaterKirkwood {
+    PolarRadiusCharge [AA^3,AA,] = {
+      1.030000    3.800000    2.820000
+    }
+  }
+  # Adding arbitrary comment, this should not change parsing result
+  Filling = Fermi {
+    Temperature [Kelvin] = 1e-08
+  }
+  KPointsAndWeights {
+    SupercellFolding = {
+      2 0 0
+      0 2 0
+      0 0 2
+      0.5 0.5 0.5
+    }
+  }
+  ElectricField {
+    PointCharges {
+      CoordsAndCharges = {
+        -0.94 -9.44 1.2 1.0
+        -0.94 -9.44 1.2 -1.0
+      }
+    }
+  }
+  SelectSomeAtoms = 1 2  " 3 : -3 "
 }
 Analysis {
   ProjectStates {

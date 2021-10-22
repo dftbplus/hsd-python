@@ -12,7 +12,7 @@ def test_dictbuilder():
     dictbuilder = hsd.HsdDictBuilder()
     parser = hsd.HsdParser(eventhandler=dictbuilder)
     with open(op.join(op.dirname(__file__), "test.hsd"), "r") as fobj:
-        parser.feed(fobj)
+        parser.parse(fobj)
     pyrep = dictbuilder.hsddict
     print("** Python structure without data flattening:\n")
     print(pyrep)
@@ -24,7 +24,7 @@ def test_dictbuilder_flat():
     dictbuilder = hsd.HsdDictBuilder(flatten_data=True, include_hsd_attribs=True)
     parser = hsd.HsdParser(eventhandler=dictbuilder, lower_tag_names=True)
     with open(op.join(op.dirname(__file__), "test.hsd"), "r") as fobj:
-        parser.feed(fobj)
+        parser.parse(fobj)
     pyrep = dictbuilder.hsddict
     print("** Python structure with data flattening:\n")
     print(pyrep)
