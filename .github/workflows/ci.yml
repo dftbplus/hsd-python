@@ -1,0 +1,36 @@
+name: CI
+on: [push, pull_request]
+
+env:
+  HSD_PYTHON_VERSION: '0.1'
+
+jobs:
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+
+    - name: Install requirements (PIP)
+      run: pip3 install pytest sphinx numpy build
+
+    - name: Setup up root directory
+      run: echo "PACKAGE_ROOT=${PWD}/src" >> $GITHUB_ENV
+
+    - name: Build and install package
+      run: |
+        python -m build
+        pip install dist/hsd_python*.whl
+        python -c "import hsd; assert hsd.__version__ == '${HSD_PYTHON_VERSION}'"
+
+    - name: Run test pytest
+      run: python3 -m pytest
+
+    - name: Run doctest
+      run: cd docs; make doctest

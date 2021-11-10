@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+
+"""Sets a version number in all relevant project files"""
+
+import sys
+import re
+import os
+
+# The pattern the version number must satisfy
+VERSION_PATTERN = r'\d+\.\d+(?:\.\d+)?(?:-\w+)?'
+
+# List of (file name, search pattern, replacement pattern) tuples for all
+# the occurancies to be replaced.
+FILES_PATTERNS = [('src/hsd/__init__.py',
+                   r'^__version__\s*=\s*([\'"]){}\1'.format(VERSION_PATTERN),
+                   "__version__ = '{version}'"),
+                  ('docs/introduction.rst',
+                   r'hsd-python version[ ]*{}.'.format(VERSION_PATTERN),
+                   'hsd-python version {shortversion}.'),
+                  ('setup.cfg',
+                   r'version\s*=\s*{}'.format(VERSION_PATTERN),
+                   "version = {version}"),
+                  ('docs/conf.py',
+                   r'release\s*=\s*([\'"]){}\1'.format(VERSION_PATTERN),
+                   "release = '{version}'"),
+                  ('.github/workflows/ci.yml',
+                   r'HSD_PYTHON_VERSION:\s*([\'"]){}\1'.format(VERSION_PATTERN),
+                   "HSD_PYTHON_VERSION: '{version}'"),
+                 ]
+
+
+def main():
+    """Main script."""
+
+    if len(sys.argv) < 2:
+        sys.stderr.write("Missing version string\n")
+        sys.exit(1)
+
+    version, shortversion = _get_version_strings(sys.argv[1])
+    rootdir = os.path.join(os.path.dirname(sys.argv[0]), '..')
+    _replace_version_in_files(FILES_PATTERNS, rootdir, version, shortversion)
+    _replace_version_in_changelog(rootdir, version)
+
+
+def _get_version_strings(version):
+    """Returns version and the short version as string"""
+
+    match = re.match(VERSION_PATTERN, version)
+    if match is None:
+        print("Invalid version string")
+        sys.exit(1)
+
+    shortversion = '.'.join(version.split('.')[0:2])
+    return version, shortversion
+
+
+def _replace_version_in_files(files_patterns, rootdir, version, shortversion):
+    """Replaces version number in given files with given search/replacement patterns"""
+
+    for fname, regexp, repl in files_patterns:
+        fname = os.path.join(rootdir, fname)
+        print("Replacments in '{}': ".format(os.path.relpath(fname, rootdir)), end='')
+        fp = open(fname, 'r')
+        txt = fp.read()
+        fp.close()
+        replacement = repl.format(version=version, shortversion=shortversion)
+        newtxt, nsub = re.subn(regexp, replacement, txt, flags=re.MULTILINE)
+        print(nsub)
+        fp = open(fname, 'w')
+        fp.write(newtxt)
+        fp.close()
+
+
+def _replace_version_in_changelog(rootdir, version):
+    """Replaces the unreleased section in CHANGELOG.rst"""
+
+    fname = os.path.join(rootdir, 'CHANGELOG.rst')
+    print("Replacments in '{}': ".format(os.path.relpath(fname, rootdir)), end='')
+    fp = open(fname, 'r')
+    txt = fp.read()
+    fp.close()
+    decoration = '=' * len(version)
+    newtxt, nsub = re.subn(
+        r'^Unreleased\s*\n=+', version + r'\n' + decoration, txt,
+        count=1, flags=re.MULTILINE)
+    print(nsub)
+    fp = open(fname, 'w')
+    fp.write(newtxt)
+    fp.close()
+
+
+if __name__ == '__main__':
+    main()
