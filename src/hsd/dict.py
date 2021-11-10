@@ -1,15 +1,15 @@
-#------------------------------------------------------------------------------#
-#  hsd-python: package for manipulating HSD-formatted data in Python           #
-#  Copyright (C) 2011 - 2021  DFTB+ developers group                           #
-#  Licensed under the BSD 2-clause license.                                    #
-#------------------------------------------------------------------------------#
+#--------------------------------------------------------------------------------------------------#
+#  hsd-python: package for manipulating HSD-formatted data in Python                               #
+#  Copyright (C) 2011 - 2021  DFTB+ developers group                                               #
+#  Licensed under the BSD 2-clause license.                                                        #
+#--------------------------------------------------------------------------------------------------#
 #
 """
 Contains an event-driven builder for dictionary based (JSON-like) structure
 """
 import re
 from typing import List, Tuple, Union
-from hsd.common import np, ATTRIB_SUFFIX, HSD_ATTRIB_SUFFIX, HsdError,\
+from hsd.common import HSD_ATTRIB_NAME, np, ATTRIB_SUFFIX, HSD_ATTRIB_SUFFIX, HsdError,\
     QUOTING_CHARS, SPECIAL_CHARS
 from hsd.eventhandler import HsdEventHandler, HsdEventPrinter
 
@@ -42,14 +42,16 @@ class HsdDictBuilder(HsdEventHandler):
 
     Args:
         flatten_data: Whether multiline data in the HSD input should be
-            flattened into a single list. Othewise a list of lists is created,
-            with one list for every line (default).
-        include_hsd_attribs: Whether the HSD-attributes (processing related
-            attributes, like original tag name, line information, etc.) should
-            be stored.
+            flattened into a single list. Othewise a list of lists is created, with one list for
+            every line (default).
+        lower_tag_names: Whether tag names should be all converted to lower case (to ease case
+            insensitive processing). Default: False. If set and include_hsd_attribs is also set,
+            the original tag names can be retrieved from the "name" hsd attributes.
+        include_hsd_attribs: Whether the HSD-attributes (processing related attributes, like
+            original tag name, line information, etc.) should be stored (default: False).
     """
 
-    def __init__(self, flatten_data: bool = False,
+    def __init__(self, flatten_data: bool = False, lower_tag_names: bool = False,
                  include_hsd_attribs: bool = False):
         super().__init__()
         self._hsddict: dict = {}
@@ -58,6 +60,7 @@ class HsdDictBuilder(HsdEventHandler):
         self._data: Union[None, _DataType] = None
         self._attribs: List[Tuple[str, dict]] = []
         self._flatten_data: bool = flatten_data
+        self._lower_tag_names: bool = lower_tag_names
         self._include_hsd_attribs: bool = include_hsd_attribs
 
 
@@ -79,35 +82,49 @@ class HsdDictBuilder(HsdEventHandler):
     def close_tag(self, tagname):
         attrib, hsdattrib = self._attribs.pop(-1)
         parentblock = self._parentblocks.pop(-1)
+        key = tagname.lower() if self._lower_tag_names else tagname
         prevcont = parentblock.get(tagname)
-        if prevcont is not None:
-            if isinstance(prevcont, dict) and self._data is None:
-                prevcont = [prevcont]
-                parentblock[tagname] = prevcont
-            elif not (isinstance(prevcont, list)
-                      and isinstance(prevcont[0], dict)):
-                msg = f"Invalid duplicate occurance of node '{tagname}'"
-                raise HsdError(msg)
 
-        if prevcont is None:
-            content = self._data if self._data is not None else self._curblock
-            parentblock[tagname] = content
-            if attrib:
-                parentblock[tagname + ATTRIB_SUFFIX] = attrib
-            if self._include_hsd_attribs:
-                parentblock[tagname + HSD_ATTRIB_SUFFIX] = hsdattrib
+        if self._data is not None:
+            if prevcont is None:
+                parentblock[key] = self._data
+            elif isinstance(prevcont, list) and len(prevcont) > 0 and isinstance(prevcont[0], dict):
+                prevcont.append({None: self._data})
+            elif isinstance(prevcont, dict):
+                parentblock[key] = [prevcont, {None: self._data}]
+            else:
+                parentblock[key] = [{None: prevcont}, {None: self._data}]
         else:
-            prevcont.append(self._curblock)
-            prevattrib = parentblock.get(tagname + ATTRIB_SUFFIX)
-            if not (prevattrib is None and attrib is None):
-                msg = f"Duplicate node '{tagname}' should not carry attributes"
-            if self._include_hsd_attribs:
-                prevhsdattrib = parentblock.get(tagname + HSD_ATTRIB_SUFFIX)
+            if prevcont is None:
+                parentblock[key] = self._curblock
+            elif isinstance(prevcont, list) and len(prevcont) > 0 and isinstance(prevcont[0], dict):
+                prevcont.append(self._curblock)
+            elif isinstance(prevcont, dict):
+                parentblock[key] = [prevcont, self._curblock]
+            else:
+                parentblock[key] = [{None: prevcont}, self._curblock]
+
+        if attrib and prevcont is None:
+            parentblock[key + ATTRIB_SUFFIX] = attrib
+        elif prevcont is not None:
+            prevattrib = parentblock.get(key + ATTRIB_SUFFIX)
+            if isinstance(prevattrib, list):
+                prevattrib.append(attrib)
+            else:
+                parentblock[key + ATTRIB_SUFFIX] = [prevattrib, attrib]
+
+        if self._include_hsd_attribs:
+            if self._lower_tag_names:
+                hsdattrib = {} if hsdattrib is None else hsdattrib
+                hsdattrib[HSD_ATTRIB_NAME] = tagname
+            if prevcont is None:
+                parentblock[key + HSD_ATTRIB_SUFFIX] = hsdattrib
+            else:
+                prevhsdattrib = parentblock.get(key + HSD_ATTRIB_SUFFIX)
                 if isinstance(prevhsdattrib, list):
                     prevhsdattrib.append(hsdattrib)
                 else:
-                    parentblock[tagname + HSD_ATTRIB_SUFFIX] = [prevhsdattrib,
-                                                                hsdattrib]
+                    parentblock[key + HSD_ATTRIB_SUFFIX] = [prevhsdattrib, hsdattrib]
         self._curblock = parentblock
         self._data = None
 
@@ -189,8 +206,12 @@ class HsdDictWalker:
             elif isinstance(value, list) and value and isinstance(value[0], dict):
                 for ind, item in enumerate(value):
                     hsdattr = hsdattrib[ind] if hsdattrib else None
-                    self._eventhandler.open_tag(key, None, hsdattr)
-                    self.walk(item)
+                    attr = attrib[ind] if attrib else None
+                    self._eventhandler.open_tag(key, attr, hsdattr)
+                    if None in item:
+                        self._eventhandler.add_text(_to_text(item[None]))
+                    else:
+                        self.walk(item)
                     self._eventhandler.close_tag(key)
 
             else:

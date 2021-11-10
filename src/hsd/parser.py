@@ -1,8 +1,8 @@
-#------------------------------------------------------------------------------#
-#  hsd-python: package for manipulating HSD-formatted data in Python           #
-#  Copyright (C) 2011 - 2021  DFTB+ developers group                           #
-#  Licensed under the BSD 2-clause license.                                    #
-#------------------------------------------------------------------------------#
+#--------------------------------------------------------------------------------------------------#
+#  hsd-python: package for manipulating HSD-formatted data in Python                               #
+#  Copyright (C) 2011 - 2021  DFTB+ developers group                                               #
+#  Licensed under the BSD 2-clause license.                                                        #
+#--------------------------------------------------------------------------------------------------#
 #
 """
 Contains the event-generating HSD-parser.
@@ -29,9 +29,6 @@ class HsdParser:
     Arguments:
         eventhandler: Object which should handle the HSD-events triggered
             during parsing. When not specified, HsdEventPrinter() is used.
-        lower_tag_names: Whether tag names should be lowered during parsing.
-            If the option is set, the original tag name will be stored among
-            the hsd attributes.
 
     Examples:
         >>> from io import StringIO
@@ -53,8 +50,7 @@ class HsdParser:
         {'Temperature': 100, 'Temperature.attrib': 'Kelvin'}}}}}
     """
 
-    def __init__(self, eventhandler: Optional[HsdEventHandler] = None,
-        lower_tag_names: bool = False):
+    def __init__(self, eventhandler: Optional[HsdEventHandler] = None):
         """Initializes the parser.
 
         Args:
@@ -79,7 +75,6 @@ class HsdParser:
         self._has_child = True             # Whether current node has a child already
         self._has_text = False             # whether current node contains text already
         self._oldbefore = ""               # buffer for tagname
-        self._lower_tag_names = lower_tag_names  # whether tag names should be lower cased
 
 
     def parse(self, fobj: Union[TextIO, str]):
@@ -145,9 +140,7 @@ class HsdParser:
             # Equal sign
             elif sign == "=":
                 # Ignore if followed by "{" (DFTB+ compatibility)
-                if after.lstrip().startswith("{"):
-                    # _oldbefore may already contain the tagname, if the
-                    # tagname was followed by an attribute -> append
+                if after.lstrip().startswith("{"):                    # _oldbefore may already contain the tagname, if the                    # tagname was followed by an attribute -> append
                     self._oldbefore += before
                 else:
                     self._hsdattrib[common.HSD_ATTRIB_EQUAL] = True
@@ -157,6 +150,7 @@ class HsdParser:
             # Opening tag by curly brace
             elif sign == "{":
                 #self._has_child = True
+                self._hsdattrib[common.HSD_ATTRIB_EQUAL] = False
                 self._starttag(before, self._after_equal_sign)
                 self._buffer = []
                 self._after_equal_sign = False
@@ -259,9 +253,6 @@ class HsdParser:
         if len(tagname_stripped.split()) > 1:
             self._error(SYNTAX_ERROR, (self._currline, self._currline))
         self._hsdattrib[common.HSD_ATTRIB_LINE] = self._currline
-        if self._lower_tag_names:
-            self._hsdattrib[common.HSD_ATTRIB_NAME] = tagname_stripped
-            tagname_stripped = tagname_stripped.lower()
         self._eventhandler.open_tag(tagname_stripped, self._attrib,
                                     self._hsdattrib)
         self._opened_tags.append(

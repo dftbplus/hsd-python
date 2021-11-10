@@ -13,6 +13,8 @@ scientific simulation tool (`DFTB+ <https://github.com/dftbplus/dftbplus>`_),
 but is of general purpose. Data stored in HSD can be easily mapped to a subset
 of JSON, YAML or XML and *vice versa*.
 
+This document describes hsd-python version 0.1.
+
 
 Installation
 ============

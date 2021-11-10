@@ -1,7 +1,7 @@
-#  hsd-python: package for manipulating HSD-formatted data in Python           #
-#  Copyright (C) 2011 - 2021  DFTB+ developers group                           #
-#  Licensed under the BSD 2-clause license.                                    #
-#------------------------------------------------------------------------------#
+#  hsd-python: package for manipulating HSD-formatted data in Python                               #
+#  Copyright (C) 2011 - 2021  DFTB+ developers group                                               #
+#  Licensed under the BSD 2-clause license.                                                        #
+#--------------------------------------------------------------------------------------------------#
 #
 """
 Provides functionality to dump Python structures to HSD
@@ -43,10 +43,9 @@ def load(hsdfile: Union[TextIO, str], lower_tag_names: bool = False,
     Examples:
         See :func:`hsd.load_string` for examples of usage.
     """
-    dictbuilder = HsdDictBuilder(flatten_data=flatten_data,
+    dictbuilder = HsdDictBuilder(lower_tag_names=lower_tag_names, flatten_data=flatten_data,
                                  include_hsd_attribs=include_hsd_attribs)
-    parser = HsdParser(eventhandler=dictbuilder,
-                       lower_tag_names=lower_tag_names)
+    parser = HsdParser(eventhandler=dictbuilder)
     if isinstance(hsdfile, str):
         with open(hsdfile, "r") as hsddescr:
             parser.parse(hsddescr)
@@ -114,7 +113,7 @@ def load_string(
         with the recorded data:
 
         >>> data["dftb.hsdattrib"]
-        {'line': 1, 'name': 'Dftb'}
+        {'equal': False, 'line': 1, 'name': 'Dftb'}
 
         This additional data can be then also used to format the tags in the
         original style, when writing the data in HSD-format again. Compare:

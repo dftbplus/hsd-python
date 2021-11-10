@@ -1,7 +1,7 @@
-#  hsd-python: package for manipulating HSD-formatted data in Python           #
-#  Copyright (C) 2011 - 2021  DFTB+ developers group                           #
-#  Licensed under the BSD 2-clause license.                                    #
-#------------------------------------------------------------------------------#
+#  hsd-python: package for manipulating HSD-formatted data in Python                               #
+#  Copyright (C) 2011 - 2021  DFTB+ developers group                                               #
+#  Licensed under the BSD 2-clause license.                                                        #
+#--------------------------------------------------------------------------------------------------#
 #
 """
 Provides an event based formatter to create HSD dumps
@@ -97,7 +97,7 @@ class HsdFormatter(HsdEventHandler):
         equal = self._followed_by_equal[-1]
         multiline = "\n" in text
         if equal is None and not multiline:
-            if len(self._followed_by_equal) > 2:
+            if len(self._followed_by_equal) > 1:
                 equal = not self._followed_by_equal[-2]
             else:
                 equal = True

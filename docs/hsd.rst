@@ -162,6 +162,10 @@ nodes will be mapped to one key, which will contain a list of dictionaries
                   ]
               },
           ]
+          # Also attributes becomes a list. Due to technialc reasons the
+          # dictbuilder always creates an attribute list for mulitple nodes,
+          # even if none of the nodes carries an actual attribute.
+          "PointCharges.attrib": [None, None]
       }
   }
 
@@ -186,7 +190,7 @@ to record following additional data for each HSD node:
 
 If this information is being recorded, a special key with the
 ``.hsdattrib`` suffix will be generated for each node in the dictionary/JSON
-presentation. The correpsonding value will be a dictionary with those
+presentation. The corresponding value will be a dictionary with those
 information.
 
 As an example, let's store the input from the previous section ::
@@ -199,7 +203,7 @@ As an example, let's store the input from the previous section ::
   }
 
 in the file `test.hsd`, parse it and convert the node names to lower case
-(to make the input processing case-insensitive). Using the Python command ::
+(to make enable case-insensitive input processing). Using the Python command ::
 
   inpdict = hsd.load("test.hsd", lower_tag_names=True, include_hsd_attribs=True)
 
@@ -208,13 +212,13 @@ will yield the following dictionary representation of the input::
   {
       'hamiltonian.hsdattrib': {'equal': True, 'line': 0, 'tag': 'Hamiltonian'},
       'hamiltonian': {
-          'dftb.hsdattrib': {'line': 0, 'tag': 'Dftb'},
+          'dftb.hsdattrib': {'line': 0, equal: False, 'tag': 'Dftb'},
           'dftb': {
               'scc.hsdattrib': {'equal': True, 'line': 1, 'tag': 'Scc'},
               'scc': True,
               'filling.hsdattrib': {'equal': True, 'line': 2, 'tag': 'Filling'},
               'filling': {
-                  'fermi.hsdattrib': {'line': 2, 'tag': 'Fermi'},
+                  'fermi.hsdattrib': {'line': 2, 'equal': False, 'tag': 'Fermi'},
                   'fermi': {
                       'temperature.attrib': 'Kelvin',
                       'temperature.hsdattrib': {'equal': True, 'line': 3,
