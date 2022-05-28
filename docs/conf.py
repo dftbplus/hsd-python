@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('../src'))
 # -- Project information -----------------------------------------------------
 
 project = 'hsd-python'
-copyright = '2021, DFTB+ developers group'
+copyright = '2022, DFTB+ developers group'
 author = 'DFTB+ developers group'
 
 # The full version, including alpha/beta/rc tags
