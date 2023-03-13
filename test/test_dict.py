@@ -79,6 +79,15 @@ _TESTS_HSDATTRIB = [
         )
     ),
     (
+        "Complex entries", (
+            "ComplexNums = 4.0+9.0i 2.1e-12-4.5e-12i 0.32+0.45i -0.01-1.0i\n",
+            {
+                "ComplexNums.hsdattrib": {_HSD_EQUAL: True, _HSD_LINE: 0},
+                "ComplexNums": [4.0+9.0j, 2.1e-12-4.5e-12j, 3.2e-1+4.5e-1j, -0.01-1.0j]
+            }
+        )
+    ),
+    (
         "Duplicate node", (
             "a {\n  b = 1\n}\na {\n  b = 2\n}\n",
             {

@@ -13,24 +13,49 @@ from hsd.common import HSD_ATTRIB_NAME, np, ATTRIB_SUFFIX, HSD_ATTRIB_SUFFIX, Hs
     QUOTING_CHARS, SPECIAL_CHARS
 from hsd.eventhandler import HsdEventHandler, HsdEventPrinter
 
-_ItemType = Union[float, int, bool, str]
+_ItemType = Union[float, complex, int, bool, str]
 
 _DataType = Union[_ItemType, List[_ItemType]]
 
 # Pattern to transform HSD string values into actual Python data types
 _TOKEN_PATTERN = re.compile(r"""
 # Integer
-(?:\s*(?:^|(?<=\s))(?P<int>[+-]?[0-9]+)(?:\s*$|\s+))
+(?:
+    \s*(?:^|(?<=\s))
+    (?P<int>[+-]?[0-9]+)
+    (?:\s*$|\s+)
+)
 |
 # Floating point
-(?:\s*(?:^|(?<=\s))
-(?P<float>[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)(?:$|(?=\s+)))
+(?:
+    \s*(?:^|(?<=\s))
+    (?P<float>[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)
+    (?:$|(?=\s+))
+)
+|
+# Complex value
+(?:
+    \s*(?:^|(?<=\s))
+    (?P<complex>
+        [-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?i
+        |
+        [-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?[-+][0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?i
+    )
+    (?:$|(?=\s+))
+)
 |
 # Logical (Yes/No)
-(?:\s*(?:^|(?<=\s))(?P<logical>[Yy][Ee][Ss]|[Nn][Oo])(?:$|(?=\s+)))
+(?:
+    \s*(?:^|(?<=\s))
+    (?P<logical>[Yy][Ee][Ss]|[Nn][Oo])
+    (?:$|(?=\s+))
+)
 |
 # Quoted string
-(?:\s*(?:(?P<qstr>(?P<quote>['"]).*?(?P=quote))
+(?:
+    \s*
+    (?:(?P<qstr>(?P<quote>['"]).*?(?P=quote)
+)
 |
 # Unquoted string
 (?P<str>.+?))(?:$|\s+))
@@ -148,6 +173,9 @@ class HsdDictBuilder(HsdEventHandler):
                     linedata.append(int(match.group("int")))
                 elif match.group("float"):
                     linedata.append(float(match.group("float")))
+                elif match.group("complex"):
+                    pycmplx = match.group("complex").replace("i", "j", 1)
+                    linedata.append(complex(pycmplx))
                 elif match.group("logical"):
                     lowlog = match.group("logical").lower()
                     linedata.append(lowlog == "yes")
@@ -246,6 +274,8 @@ def _item_to_hsd(item):
         return "Yes" if item else "No"
     if isinstance(item, (int, float)):
         return str(item)
+    if isinstance(item, complex):
+        return f"{item.real}{item.imag:+}i"
     if isinstance(item, str):
         return _str_to_hsd(item)
     msg = "Data type {} can not be converted to HSD string"\
