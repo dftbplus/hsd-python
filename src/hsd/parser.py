@@ -10,7 +10,7 @@ Contains the event-generating HSD-parser.
 from typing import Optional, TextIO, Union
 from hsd import common
 from hsd.eventhandler import HsdEventHandler, HsdEventPrinter
-
+from hsd.interrupts import IncludeHsd, IncludeText
 
 SYNTAX_ERROR = 1
 UNCLOSED_TAG_ERROR = 2
@@ -50,11 +50,13 @@ class HsdParser:
         {'Temperature': 100, 'Temperature.attrib': 'Kelvin'}}}}}
     """
 
-    def __init__(self, eventhandler: Optional[HsdEventHandler] = None):
+    def __init__(self, eventhandler: Optional[HsdEventHandler] = None,
+                 include_file: bool = True):
         """Initializes the parser.
 
         Args:
             eventhandler: Instance of the HsdEventHandler class or its children.
+            include_file: Whether files via "<<<"/"<<+" should be included or not
         """
         if eventhandler is None:
             self._eventhandler = HsdEventPrinter()
@@ -75,6 +77,7 @@ class HsdParser:
         self._has_child = True             # Whether current node has a child already
         self._has_text = False             # whether current node contains text already
         self._oldbefore = ""               # buffer for tagname
+        self._include_file = include_file  # Whether files via "<<<"/"<<+" should be included or not
 
 
     def parse(self, fobj: Union[TextIO, str]):
@@ -216,10 +219,19 @@ class HsdParser:
                 if txtinc:
                     self._text("".join(self._buffer) + before)
                     self._buffer = []
-                    self._eventhandler.add_text(self._include_txt(after[2:]))
+                    if self._include_file:
+                        text = self._include_txt(after[2:])
+                        self._eventhandler.add_text(text)
+                    else:
+                        interrupt = IncludeText(after[2:])
+                        self._eventhandler.add_interrupt(interrupt)
                     break
                 if hsdinc:
-                    self._include_hsd(after[2:])
+                    if self._include_file:
+                        self._include_hsd(after[2:])
+                    else:
+                        interrupt = IncludeHsd(after[2:])
+                        self._eventhandler.add_interrupt(interrupt)
                     break
                 self._buffer.append(before + sign)
 

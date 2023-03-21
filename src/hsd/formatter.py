@@ -8,15 +8,16 @@ Provides an event based formatter to create HSD dumps
 """
 
 from typing import List, TextIO, Union
-from hsd.common import HSD_ATTRIB_EQUAL, HSD_ATTRIB_NAME
+from hsd.common import HSD_ATTRIB_EQUAL, HSD_ATTRIB_NAME, HsdError
 from hsd.eventhandler import HsdEventHandler
+from hsd.interrupts import Interrupt, IncludeHsd, IncludeText
 
 
 _INDENT_STR = "  "
 
 
 class HsdFormatter(HsdEventHandler):
-    """Implements an even driven HSD formatter.
+    """Implements an event driven HSD formatter.
 
     Args:
         fobj: File like object to write the formatted output to.
@@ -106,10 +107,36 @@ class HsdFormatter(HsdEventHandler):
             self._followed_by_equal[-1] = True
         else:
             self._indent_level += 1
-            indentstr = self._indent_level *  _INDENT_STR
+            indentstr = self._indent_level * _INDENT_STR
             self._fobj.write(f" {{\n{indentstr}")
             text = text.replace("\n", "\n" + indentstr)
 
+        self._fobj.write(text)
+        self._fobj.write("\n")
+        self._nr_children[-1] += 1
+
+
+    def add_interrupt(self, interrupt: Interrupt):
+
+        if isinstance(interrupt, IncludeHsd):
+            operator = "<<+"
+        elif isinstance(interrupt, IncludeText):
+            operator = "<<<"
+        else:
+            msg = ("The 'HsdFormatter' does not support Interrupts of "
+                   f"type '{type(interrupt)}' !")
+            raise HsdError(msg)
+
+        equal = self._followed_by_equal[-1]
+        if equal:
+            self._fobj.write(" = ")
+            self._followed_by_equal[-1] = True
+        else:
+            self._indent_level += 1
+            indentstr = self._indent_level *  _INDENT_STR
+            self._fobj.write(f" {{\n{indentstr}")
+
+        text = operator + ' "'  + interrupt.file + '"'
         self._fobj.write(text)
         self._fobj.write("\n")
         self._nr_children[-1] += 1
