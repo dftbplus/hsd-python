@@ -12,6 +12,7 @@ from typing import List, Tuple, Union
 from hsd.common import HSD_ATTRIB_NAME, np, ATTRIB_SUFFIX, HSD_ATTRIB_SUFFIX, HsdError,\
     QUOTING_CHARS, SPECIAL_CHARS
 from hsd.eventhandler import HsdEventHandler, HsdEventPrinter
+from hsd.interrupts import Interrupt
 
 _ItemType = Union[float, complex, int, bool, str]
 
@@ -67,7 +68,7 @@ class HsdDictBuilder(HsdEventHandler):
 
     Args:
         flatten_data: Whether multiline data in the HSD input should be
-            flattened into a single list. Othewise a list of lists is created, with one list for
+            flattened into a single list. Otherwise a list of lists is created, with one list for
             every line (default).
         lower_tag_names: Whether tag names should be all converted to lower case (to ease case
             insensitive processing). Default: False. If set and include_hsd_attribs is also set,
@@ -161,6 +162,13 @@ class HsdDictBuilder(HsdEventHandler):
         self._data = self._text_to_data(text)
 
 
+    def add_interrupt(self, interrupt):
+        if self._curblock or self._data is not None:
+            msg = "Data appeared in an invalid context"
+            raise HsdError(msg)
+        self._data = interrupt
+
+
     def _text_to_data(self, txt: str) -> _DataType:
         data = []
         for line in txt.split("\n"):
@@ -241,6 +249,11 @@ class HsdDictWalker:
                     else:
                         self.walk(item)
                     self._eventhandler.close_tag(key)
+
+            elif isinstance(value, Interrupt):
+                self._eventhandler.open_tag(key, attrib, hsdattrib)
+                self._eventhandler.add_interrupt(value)
+                self._eventhandler.close_tag(key)
 
             else:
                 self._eventhandler.open_tag(key, attrib, hsdattrib)

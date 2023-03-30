@@ -109,6 +109,8 @@ class _TestEventHandler(hsd.HsdEventHandler):
     def add_text(self, text):
         self.events.append((_ADD_TEXT_EVENT, text))
 
+    def add_interrupt(self, interrupt):
+        pass
 
 @pytest.mark.parametrize(
     "hsd_input,expected_events",

@@ -10,6 +10,7 @@ Contains an event handler base class.
 
 from abc import ABC, abstractmethod
 from typing import Optional
+from hsd.interrupts import Interrupt
 
 
 class HsdEventHandler(ABC):
@@ -43,6 +44,13 @@ class HsdEventHandler(ABC):
            text: Text in the current tag.
         """
 
+    @abstractmethod
+    def add_interrupt(self, interrupt: Interrupt):
+        """Adds interrupts to the current tag.
+
+        Args:
+           interrupt: Instance of the Interrupt class or its children.
+        """
 
 
 class HsdEventPrinter(HsdEventHandler):
@@ -75,3 +83,8 @@ class HsdEventPrinter(HsdEventHandler):
     def add_text(self, text: str):
         indentstr = self._indentlevel * self._indentstr
         print(f"{indentstr}Received text: {text}")
+
+    def add_interrupt(self, interrupt: Interrupt):
+        indentstr = self._indentlevel * self._indentstr
+        print(f"{indentstr}Received interrupt: type '{type(interrupt)}' to "
+              f"file '{interrupt.file}'")
