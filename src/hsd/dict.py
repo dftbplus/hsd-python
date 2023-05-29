@@ -9,9 +9,16 @@ Contains an event-driven builder for dictionary based (JSON-like) structure
 """
 import re
 from typing import List, Tuple, Union
-from hsd.common import HSD_ATTRIB_NAME, np, ATTRIB_SUFFIX, HSD_ATTRIB_SUFFIX, HsdError,\
-    QUOTING_CHARS, SPECIAL_CHARS
+from hsd.common import HSD_ATTRIB_NAME, np, HsdError, QUOTING_CHARS, SPECIAL_CHARS
 from hsd.eventhandler import HsdEventHandler, HsdEventPrinter
+
+
+# Dictionary key suffix to mark attribute
+ATTRIB_KEY_SUFFIX = ".attrib"
+
+# Dictionary keysuffix to mark hsd processing attributes
+HSD_ATTRIB_KEY_SUFFIX = ".hsdattrib"
+
 
 _ItemType = Union[float, complex, int, bool, str]
 
@@ -130,26 +137,26 @@ class HsdDictBuilder(HsdEventHandler):
                 parentblock[key] = [{None: prevcont}, self._curblock]
 
         if attrib and prevcont is None:
-            parentblock[key + ATTRIB_SUFFIX] = attrib
+            parentblock[key + ATTRIB_KEY_SUFFIX] = attrib
         elif prevcont is not None:
-            prevattrib = parentblock.get(key + ATTRIB_SUFFIX)
+            prevattrib = parentblock.get(key + ATTRIB_KEY_SUFFIX)
             if isinstance(prevattrib, list):
                 prevattrib.append(attrib)
             else:
-                parentblock[key + ATTRIB_SUFFIX] = [prevattrib, attrib]
+                parentblock[key + ATTRIB_KEY_SUFFIX] = [prevattrib, attrib]
 
         if self._include_hsd_attribs:
             if self._lower_tag_names:
                 hsdattrib = {} if hsdattrib is None else hsdattrib
                 hsdattrib[HSD_ATTRIB_NAME] = tagname
             if prevcont is None:
-                parentblock[key + HSD_ATTRIB_SUFFIX] = hsdattrib
+                parentblock[key + HSD_ATTRIB_KEY_SUFFIX] = hsdattrib
             else:
-                prevhsdattrib = parentblock.get(key + HSD_ATTRIB_SUFFIX)
+                prevhsdattrib = parentblock.get(key + HSD_ATTRIB_KEY_SUFFIX)
                 if isinstance(prevhsdattrib, list):
                     prevhsdattrib.append(hsdattrib)
                 else:
-                    parentblock[key + HSD_ATTRIB_SUFFIX] = [prevhsdattrib, hsdattrib]
+                    parentblock[key + HSD_ATTRIB_KEY_SUFFIX] = [prevhsdattrib, hsdattrib]
         self._curblock = parentblock
         self._data = None
 
@@ -219,11 +226,11 @@ class HsdDictWalker:
 
         for key, value in dictobj.items():
 
-            if key.endswith(ATTRIB_SUFFIX) or key.endswith(HSD_ATTRIB_SUFFIX):
+            if key.endswith(ATTRIB_KEY_SUFFIX) or key.endswith(HSD_ATTRIB_KEY_SUFFIX):
                 continue
 
-            hsdattrib = dictobj.get(key + HSD_ATTRIB_SUFFIX)
-            attrib = dictobj.get(key + ATTRIB_SUFFIX)
+            hsdattrib = dictobj.get(key + HSD_ATTRIB_KEY_SUFFIX)
+            attrib = dictobj.get(key + ATTRIB_KEY_SUFFIX)
 
             if isinstance(value, dict):
 

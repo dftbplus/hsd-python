@@ -28,12 +28,6 @@ def unquote(txt):
 # Name for default attribute (when attribute name is not specified)
 DEFAULT_ATTRIBUTE = "unit"
 
-# Suffix to mark attribute
-ATTRIB_SUFFIX = ".attrib"
-
-# Suffix to mark hsd processing attributes
-HSD_ATTRIB_SUFFIX = ".hsdattrib"
-
 # HSD attribute containing the original tag name
 HSD_ATTRIB_NAME = "name"
 

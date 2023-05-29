@@ -6,6 +6,7 @@
 """
 Provides functionality to dump Python structures to HSD
 """
+from collections.abc import Mapping
 import io
 from typing import Union, TextIO
 from hsd.dict import HsdDictWalker, HsdDictBuilder
@@ -155,7 +156,7 @@ def dump(data: dict, hsdfile: Union[TextIO, str],
 
         See :func:`hsd.load_string` for an example.
     """
-    if not isinstance(data, dict):
+    if not isinstance(data, Mapping):
         msg = "Invalid object type"
         raise TypeError(msg)
     if isinstance(hsdfile, str):
