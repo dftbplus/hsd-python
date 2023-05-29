@@ -205,7 +205,7 @@ As an example, let's store the input from the previous section ::
 in the file `test.hsd`, parse it and convert the node names to lower case
 (to make enable case-insensitive input processing). Using the Python command ::
 
-  inpdict = hsd.load("test.hsd", lower_tag_names=True, include_hsd_attribs=True)
+  inpdict = hsd.load("test.hsd", lower_names=True, save_hsd_attribs=True)
 
 will yield the following dictionary representation of the input::
 
@@ -236,7 +236,7 @@ The node names and formatting information about the equal sign ensures
 that the formatting is similar to the original HSD, if the data is dumped
 into the HSD format again. Dumping the dictionary with ::
 
-  hsd.dump(inpdict, "test2-formatted.hsd", use_hsd_attribs=True)
+  hsd.dump(inpdict, "test2-formatted.hsd", apply_hsd_attribs=True)
 
 would indeed yield ::
 
@@ -251,7 +251,7 @@ which is basically identical with the original input. If the additional
 processing information is not recorded when the data is loaded, or
 it is not considered when the data is dumped as HSD again ::
 
-  inpdict = hsd.load("test.hsd", lower_tag_names=True)
+  inpdict = hsd.load("test.hsd", lower_names=True)
   hsd.dump(inpdict, "test2-unformatted.hsd")
 
 the resulting formatting will more strongly differ from the original HSD ::

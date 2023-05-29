@@ -76,15 +76,15 @@ class HsdDictBuilder(HsdEventHandler):
         flatten_data: Whether multiline data in the HSD input should be
             flattened into a single list. Othewise a list of lists is created, with one list for
             every line (default).
-        lower_tag_names: Whether tag names should be all converted to lower case (to ease case
-            insensitive processing). Default: False. If set and include_hsd_attribs is also set,
+        lower_names: Whether tag names should be all converted to lower case (to ease case
+            insensitive processing). Default: False. If set and save_hsd_attribs is also set,
             the original tag names can be retrieved from the "name" hsd attributes.
-        include_hsd_attribs: Whether the HSD-attributes (processing related attributes, like
+        save_hsd_attribs: Whether the HSD-attributes (processing related attributes, like
             original tag name, line information, etc.) should be stored (default: False).
     """
 
-    def __init__(self, flatten_data: bool = False, lower_tag_names: bool = False,
-                 include_hsd_attribs: bool = False):
+    def __init__(self, flatten_data: bool = False, lower_names: bool = False,
+                 save_hsd_attribs: bool = False):
         super().__init__()
         self._hsddict: dict = {}
         self._curblock: dict = self._hsddict
@@ -92,8 +92,8 @@ class HsdDictBuilder(HsdEventHandler):
         self._data: Union[None, _DataType] = None
         self._attribs: List[Tuple[str, dict]] = []
         self._flatten_data: bool = flatten_data
-        self._lower_tag_names: bool = lower_tag_names
-        self._include_hsd_attribs: bool = include_hsd_attribs
+        self._lower_names: bool = lower_names
+        self._save_hsd_attribs: bool = save_hsd_attribs
 
 
     @property
@@ -114,7 +114,7 @@ class HsdDictBuilder(HsdEventHandler):
     def close_tag(self, tagname):
         attrib, hsdattrib = self._attribs.pop(-1)
         parentblock = self._parentblocks.pop(-1)
-        key = tagname.lower() if self._lower_tag_names else tagname
+        key = tagname.lower() if self._lower_names else tagname
         prevcont = parentblock.get(tagname)
 
         if self._data is not None:
@@ -145,8 +145,8 @@ class HsdDictBuilder(HsdEventHandler):
             else:
                 parentblock[key + ATTRIB_KEY_SUFFIX] = [prevattrib, attrib]
 
-        if self._include_hsd_attribs:
-            if self._lower_tag_names:
+        if self._save_hsd_attribs:
+            if self._lower_names:
                 hsdattrib = {} if hsdattrib is None else hsdattrib
                 hsdattrib[HSD_ATTRIB_NAME] = tagname
             if prevcont is None:

@@ -122,7 +122,7 @@ and then stored again in HSD format ::
     hsd.dump(hsdinput, "test2.hsd")
 
 
-   
+
 Accesing nested data structures via wrappers
 --------------------------------------------
 
@@ -183,7 +183,7 @@ actual form of the name of the new node will be saved. The code snippet::
   hsdinp["driver", "conjugategradients", "MaxForce"] = hsd.HsdValue(1e-4, attrib="au")
   maxforceval = hsdinp["driver", "conjugategradients", "maxforce"]
   print(f"{maxforceval.value} {maxforceval.attrib}")
-  print(hsd.dump_string(hsdinp.value, use_hsd_attribs=True))
+  print(hsd.dump_string(hsdinp.value, apply_hsd_attribs=True))
 
 will result in ::
 
