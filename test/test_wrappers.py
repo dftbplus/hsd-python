@@ -181,10 +181,37 @@ def test_get_item():
 
 def test_set_item():
     inp = {"a": 1}
-    hdict = hsd.HsdDict(inp)
-    hdict.set_item("b", 2)
-    assert hdict == hsd.HsdDict({"a": 1, "b": 2})
+    hinp = hsd.wrap(inp)
+    hinp.set_item("b", 2)
+    assert hinp == hsd.HsdDict({"a": 1, "b": 2})
     with pytest.raises(KeyError):
-        hdict.set_item("c / d", 3)
-    hdict.set_item("c / d", 3, parents=True)
-    assert hdict == hsd.HsdDict({"a": 1, "b": 2, "c": {"d": 3}})
+        hinp.set_item("c / d", 3)
+    hinp.set_item("c / d", 3, parents=True)
+    assert hinp == hsd.HsdDict({"a": 1, "b": 2, "c": {"d": 3}})
+
+
+def test_set_default_existing_key():
+    inp = {"a": 1}
+    hinp = hsd.wrap(inp)
+    hinp2 = hsd.copy(hinp)
+    val = hinp2.set_default("a", default=9)
+    assert val == hsd.HsdValue(1)
+    assert hinp2 == hinp
+
+
+def test_set_default_missing_key():
+    inp = {"a": 1}
+    hinp = hsd.wrap(inp)
+    val = hinp.set_default("b", default=9)
+    assert val == 9
+    assert hinp == hsd.HsdDict({"a": 1, "b": 9})
+
+
+def test_set_default_missing_key_parents():
+    inp = {"a": 1}
+    hinp = hsd.wrap(inp)
+    with pytest.raises(KeyError) as _:
+        val = hinp.set_default("b/c", default=3)
+    val = hinp.set_default("b/c", default=3, parents=True)
+    assert val == 3
+    assert hinp == hsd.HsdDict({"a": 1, "b": {"c": 3}})

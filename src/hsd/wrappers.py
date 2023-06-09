@@ -132,7 +132,7 @@ class HsdContainer(HsdNode):
             key: Path/key where the item should be stored.
             value: Item to store.
             parents: Whether missing parents should be created. Creating missing parents is only
-            possible if the missing path does not contain list indices.
+                possible if the missing path does not contain list indices.
         """
         path = _path_from_key(key)
         normpath = _normalized_path(path, self._lower_names)
@@ -169,6 +169,25 @@ class HsdContainer(HsdNode):
             Item at given key/path or the default value.
         """
         return self.get(key, default=default)
+
+    def set_default(self, key, default=None, parents=False):
+        """Returns value for an existing key, or create the key with default value and returns that.
+
+        Args:
+            key: Key to look for
+            default: Default value to return (and set for newly created key), if key does not exist.
+            parents: Whether missing parents should be created when new key is created. Creating
+                missing parents is only possible if the missing subpath does not contain list
+                indices.
+
+        Returns:
+            Value for the given key, if key existed, default value otherwise.
+        """
+        try:
+            return self[key]
+        except KeyError:
+            self.set_item(key, default, parents=parents)
+            return default
 
     @classmethod
     def copy(cls, source, lower_names=False, save_names=False):

@@ -155,6 +155,12 @@ encapsulated information in the structure::
   # Setting a value for given path by creating missing parents
   hsdinp.set_item("analysis / calculate_forces", True, parents=True)
 
+  # Getting a value at a path, or default value, if given path does not exist.
+  # In latter case, path should be created (incl. missing parents) and set to default value.
+  has_mulliken = hsdinp.set_default(
+    "analysis / mullikenanalyis", default=hsd.HsdValue(True), parents=True
+  ).value
+
 As demonstrated above, paths can be specified as tuples or as slash (``/``) joined strings.
 
 The wrappers also support case-insensitive access. Let's have a look at a
