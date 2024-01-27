@@ -1,5 +1,5 @@
 #  hsd-python: package for manipulating HSD-formatted data in Python                               #
-#  Copyright (C) 2011 - 2023  DFTB+ developers group                                               #
+#  Copyright (C) 2011 - 2024  DFTB+ developers group                                               #
 #  Licensed under the BSD 2-clause license.                                                        #
 #--------------------------------------------------------------------------------------------------#
 #
