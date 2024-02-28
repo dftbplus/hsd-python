@@ -128,6 +128,9 @@ class HsdParser:
                     self._closetag()
                     self._after_equal_sign = False
                 elif not self._inside_attrib:
+                    if before.strip().startswith("$"):
+                        self._eventhandler.retrieve_tag(before)
+                        before = ""
                     self._buffer.append(before)
                 elif before.strip():
                     self._error(SYNTAX_ERROR, (self._currline, self._currline))
