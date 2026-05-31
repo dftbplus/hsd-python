@@ -103,6 +103,13 @@ class HsdDictBuilder(HsdEventHandler):
         self._parentblocks.append(self._curblock)
         self._curblock = {}
 
+    def retrieve_tag(self, tagname):
+        tagname = tagname.strip()
+        key = tagname.lower() if self._lower_tag_names else tagname
+        for parentblock in self._parentblocks[-1::-1]:
+            if key in parentblock:
+                self._curblock.update(parentblock[key])
+                break
 
     def close_tag(self, tagname):
         attrib, hsdattrib = self._attribs.pop(-1)
