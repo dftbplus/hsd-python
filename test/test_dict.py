@@ -148,7 +148,7 @@ _TESTS_HSDATTRIB_LOWER_NAMES, _TESTS_HSDATTRIB_LOWER_CASES = zip(*_TESTS_HSDATTR
 )
 def test_dict_builder_nohsdattr(hsdstr, hsddict):
     """Test transformation from hsd to dictionary without HSD attributes."""
-    dictbuilder = hsd.HsdDictBuilder(include_hsd_attribs=False)
+    dictbuilder = hsd.HsdDictBuilder(save_hsd_attribs=False)
     parser = hsd.HsdParser(eventhandler=dictbuilder)
     fobj = io.StringIO(hsdstr)
     parser.parse(fobj)
@@ -162,7 +162,7 @@ def test_dict_builder_nohsdattr(hsdstr, hsddict):
 )
 def test_dict_builder_hsdattr(hsdstr, hsddict):
     """Test transformation from hsd to dictionary with HSD attributes."""
-    dictbuilder = hsd.HsdDictBuilder(include_hsd_attribs=True)
+    dictbuilder = hsd.HsdDictBuilder(save_hsd_attribs=True)
     parser = hsd.HsdParser(eventhandler=dictbuilder)
     fobj = io.StringIO(hsdstr)
     parser.parse(fobj)
@@ -176,7 +176,7 @@ def test_dict_builder_hsdattr(hsdstr, hsddict):
 )
 def test_dict_builder_hsdattr_lower(hsdstr, hsddict):
     """Test transformation from hsd to dictionary with HSD attributes and case lowering."""
-    dictbuilder = hsd.HsdDictBuilder(include_hsd_attribs=True, lower_tag_names=True)
+    dictbuilder = hsd.HsdDictBuilder(save_hsd_attribs=True, lower_names=True)
     parser = hsd.HsdParser(eventhandler=dictbuilder)
     fobj = io.StringIO(hsdstr)
     parser.parse(fobj)
@@ -191,7 +191,7 @@ def test_dict_builder_hsdattr_lower(hsdstr, hsddict):
 def test_dict_walker_hsdattr(hsdstr, hsddict):
     """Test transformation from dictionary to string using HSD attributes."""
     output = io.StringIO()
-    formatter = hsd.HsdFormatter(output, use_hsd_attribs=True)
+    formatter = hsd.HsdFormatter(output, apply_hsd_attribs=True)
     dictwalker = hsd.HsdDictWalker(formatter)
     dictwalker.walk(hsddict)
     assert output.getvalue() == hsdstr
@@ -205,7 +205,7 @@ def test_dict_walker_hsdattr(hsdstr, hsddict):
 def test_dict_walker_hsdattr_lower(hsdstr, hsddict):
     """Test transformation from dictionary to string using HSD attributes."""
     output = io.StringIO()
-    formatter = hsd.HsdFormatter(output, use_hsd_attribs=True)
+    formatter = hsd.HsdFormatter(output, apply_hsd_attribs=True)
     dictwalker = hsd.HsdDictWalker(formatter)
     dictwalker.walk(hsddict)
     assert output.getvalue() == hsdstr

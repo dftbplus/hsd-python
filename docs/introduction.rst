@@ -36,6 +36,9 @@ or into the user space issueing ::
 Quick tutorial
 ==============
 
+The basics
+----------
+
 A typical, self-explaining input written in HSD looks like ::
 
   driver {
@@ -117,3 +120,87 @@ Python ::
 and then stored again in HSD format ::
 
     hsd.dump(hsdinput, "test2.hsd")
+
+
+
+Accesing nested data structures via wrappers
+--------------------------------------------
+
+The hsd module contains lightweight wrappers (``HsdDict``, ``HsdList`` and
+``HsdValue``), which offer convenient access to entries in nested data
+structures.  With the help of these wrappers, nested nodes and values can be
+directly accessed using paths. When accessing nested content via wrappers, the
+resulting objects will be wrappers themself, wrapping the appropriate parts of
+the data structure (and inheriting certain properties of the original wrapper).
+
+For example, reading and wrapping the example above::
+
+  import hsd
+  hsdinp = hsd.wrap(hsd.load("test.hsd"))
+
+creates an ``HsdDict`` wrapper instance (``hsdinp``), which can be used to query
+encapsulated information in the structure::
+
+  # Reading out the value directly (100)
+  maxsteps = hsdinp["driver", "conjugate_gradients", "max_steps"].value
+
+  # Storing wrapper (HsdValue) instance and reading out value and the attribute
+  temp = hsdinp["hamiltonian / dftb / filling / fermi / temperature"]
+  temp_value = temp.value
+  temp_unit = temp.attrib
+
+  # Getting a default value, if a given path does not exists:
+  pot = hsdinp.get_item("hamiltonian / dftb / bias", default=hsd.HsdValue(100, attrib="V"))
+
+  # Setting a value for given path by creating missing parents
+  hsdinp.set_item("analysis / calculate_forces", True, parents=True)
+
+  # Getting a value at a path, or default value, if given path does not exist.
+  # In latter case, path should be created (incl. missing parents) and set to default value.
+  has_mulliken = hsdinp.set_default(
+    "analysis / mullikenanalyis", default=hsd.HsdValue(True), parents=True
+  ).value
+
+As demonstrated above, paths can be specified as tuples or as slash (``/``) joined strings.
+
+The wrappers also support case-insensitive access. Let's have a look at a
+mixed-case example file ``test2.hsd``::
+
+  Driver {
+  ConjugateGradients {
+    MovedAtoms = 1 2 "7:19"
+    MaxSteps = 100
+  }
+
+We now make copy of the data structure before wrapping it, and make sure that
+all keys are converted to lower case, but the original names are saved as
+HSD-attributes::
+
+  hsdinp = hsd.copy(hsd.load("test2.hsd"), lower_names=True, save_names=True)
+
+This way, paths passed to the Hsd-wrapper are treated in a case-insensitive
+way::
+
+  maxsteps = hsdinp["driver", "CONJUGATEGRADIENTS", "MAXSTEPS"].value
+
+When adding new items, the access is and remains case in-sensitive, but the
+actual form of the name of the new node will be saved. The code snippet::
+
+  hsdinp["driver", "conjugategradients", "MaxForce"] = hsd.HsdValue(1e-4, attrib="au")
+  maxforceval = hsdinp["driver", "conjugategradients", "maxforce"]
+  print(f"{maxforceval.value} {maxforceval.attrib}")
+  print(hsd.dump_string(hsdinp.value, apply_hsd_attribs=True))
+
+will result in ::
+
+  0.0001 au
+  Driver {
+    ConjugateGradients {
+      MovedAtoms = 1 2 "7:19"
+      MaxSteps = 100
+      MaxForce [au] = 0.0001
+    }
+  }
+
+where the case-convention for ``MaxForce`` is identical to the one used when the
+item was created.

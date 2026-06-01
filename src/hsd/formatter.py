@@ -20,14 +20,14 @@ class HsdFormatter(HsdEventHandler):
 
     Args:
         fobj: File like object to write the formatted output to.
-        use_hsd_attribs: Whether HSD attributes passed to the formatter should
+        apply_hsd_attribs: Whether HSD attributes passed to the formatter should
             be considered, when formatting the the output (default: True)
     """
 
-    def __init__(self, fobj, use_hsd_attribs=True):
+    def __init__(self, fobj, apply_hsd_attribs=True):
         super().__init__()
         self._fobj: TextIO = fobj
-        self._use_hsd_attribs: bool = use_hsd_attribs
+        self._apply_hsd_attribs: bool = apply_hsd_attribs
         self._level: int = 0
         self._indent_level: int = 0
         # Whether last node on current level should/was followed by an
@@ -61,7 +61,7 @@ class HsdFormatter(HsdEventHandler):
         else:
             indentstr = self._indent_level * _INDENT_STR
 
-        if self._use_hsd_attribs and hsdattrib is not None:
+        if self._apply_hsd_attribs and hsdattrib is not None:
             tagname = hsdattrib.get(HSD_ATTRIB_NAME, tagname)
 
         self._fobj.write(f"{indentstr}{tagname}{attribstr}")
@@ -74,7 +74,7 @@ class HsdFormatter(HsdEventHandler):
         self._level += 1
 
         equal = None
-        if hsdattrib is not None and self._use_hsd_attribs:
+        if hsdattrib is not None and self._apply_hsd_attribs:
             equal = hsdattrib.get(HSD_ATTRIB_EQUAL)
         self._followed_by_equal.append(equal)
 
