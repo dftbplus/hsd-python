@@ -18,7 +18,8 @@ _INDENT_STR = "  "
 
 
 def load(hsdfile: Union[TextIO, str], lower_tag_names: bool = False,
-         include_hsd_attribs: bool = False, flatten_data: bool = False) -> dict:
+         include_hsd_attribs: bool = False, flatten_data: bool = False,
+         include_file: bool = True) -> dict:
     """Loads a file with HSD-formatted data into a Python dictionary
 
     Args:
@@ -36,6 +37,7 @@ def load(hsdfile: Union[TextIO, str], lower_tag_names: bool = False,
         flatten_data: Whether multiline data in the HSD input should be
             flattened into a single list. Othewise a list of lists is created,
             with one list for every line (default).
+        include_file: Whether files via "<<<"/"<<+" should be included or not
 
     Returns:
         Dictionary representing the HSD data.
@@ -45,7 +47,7 @@ def load(hsdfile: Union[TextIO, str], lower_tag_names: bool = False,
     """
     dictbuilder = HsdDictBuilder(lower_tag_names=lower_tag_names, flatten_data=flatten_data,
                                  include_hsd_attribs=include_hsd_attribs)
-    parser = HsdParser(eventhandler=dictbuilder)
+    parser = HsdParser(eventhandler=dictbuilder, include_file=include_file)
     if isinstance(hsdfile, str):
         with open(hsdfile, "r") as hsddescr:
             parser.parse(hsddescr)
@@ -56,8 +58,8 @@ def load(hsdfile: Union[TextIO, str], lower_tag_names: bool = False,
 
 def load_string(
         hsdstr: str, lower_tag_names: bool = False,
-        include_hsd_attribs: bool = False, flatten_data: bool = False
-    ) -> dict:
+        include_hsd_attribs: bool = False, flatten_data: bool = False,
+        include_file: bool = True) -> dict:
     """Loads a string with HSD-formatted data into a Python dictionary.
 
     Args:
@@ -75,6 +77,7 @@ def load_string(
         flatten_data: Whether multiline data in the HSD input should be
             flattened into a single list. Othewise a list of lists is created,
             with one list for every line (default).
+        include_file: Whether files via "<<<"/"<<+" should be included or not
 
     Returns:
         Dictionary representing the HSD data.
@@ -130,7 +133,8 @@ def load_string(
 
     """
     fobj = io.StringIO(hsdstr)
-    return load(fobj, lower_tag_names, include_hsd_attribs, flatten_data)
+    return load(fobj, lower_tag_names, include_hsd_attribs, flatten_data,
+                include_file)
 
 
 def dump(data: dict, hsdfile: Union[TextIO, str],
